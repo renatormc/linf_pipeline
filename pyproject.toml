@@ -1,0 +1,14 @@
+[project]
+name = "linf-pipeline"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.13.2"
+dependencies = [
+    "sqlalchemy[mypy]>=2.0.38",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+]
