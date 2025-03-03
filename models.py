@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
 import sqlalchemy as sa
 import config
@@ -14,19 +15,33 @@ db_session = scoped_session(SessionMaker)
 class Base(DeclarativeBase):
     pass
 
+
 recurso_tarefa = sa.Table('recurso_tarefa', Base.metadata,
-                      sa.Column('recurso', sa.Integer, sa.ForeignKey('recurso.id'), nullable=False),
-                      sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
-                      sa.PrimaryKeyConstraint('recurso', 'tarefa'))
-   
+                          sa.Column('recurso', sa.Integer, sa.ForeignKey('recurso.id'), nullable=False),
+                          sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
+                          sa.PrimaryKeyConstraint('recurso', 'tarefa'))
+
+
+class Perito(Base):
+    __tablename__ = 'perito'
+    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    nome: Mapped[str] = mapped_column(sa.String(100))
+    pericias: Mapped[list['Pericia']] = relationship(back_populates="perito")
+
+    def __repr__(self):
+        return str(self.id)
+
+
 class Pericia(Base):
     __tablename__ = 'pericia'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     objetos: Mapped[list['Objeto']] = relationship(back_populates="pericia", cascade="all, delete-orphan")
+    perito_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("perito.id"))
+    perito: Mapped[Optional['Perito']] = relationship(back_populates="pericias", uselist=False)
 
     def __repr__(self):
         return str(self.id)
-    
+
 
 class Objeto(Base):
     __tablename__ = 'objeto'
@@ -39,7 +54,7 @@ class Objeto(Base):
 
     def __repr__(self):
         return f"{self.tipo} - {self.subtipo}"
-    
+
 
 class Tarefa(Base):
     __tablename__ = 'tarefa'
@@ -52,11 +67,11 @@ class Tarefa(Base):
     objeto_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("objeto.id"))
     objeto: Mapped['Objeto'] = relationship(back_populates="tarefas", uselist=False)
     recursos: Mapped[list['Recurso']] = relationship(back_populates="tarefa", secondary=recurso_tarefa)
-        
+
     def __repr__(self):
         return str(self.nome)
-    
-    
+
+
 class Recurso(Base):
     __tablename__ = 'recurso'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
