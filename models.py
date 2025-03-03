@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
 import sqlalchemy as sa
@@ -60,13 +61,13 @@ class Tarefa(Base):
     __tablename__ = 'tarefa'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(sa.String(100))
-    comeco: Mapped[int | None] = mapped_column(sa.Integer)
-    fim: Mapped[int | None] = mapped_column(sa.Integer)
+    comeco: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    fim: Mapped[datetime | None] = mapped_column(sa.DateTime)
     duracao: Mapped[int] = mapped_column(sa.Integer)
     ordem: Mapped[int] = mapped_column(sa.Integer)
     objeto_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("objeto.id"))
     objeto: Mapped['Objeto'] = relationship(back_populates="tarefas", uselist=False)
-    recursos: Mapped[list['Recurso']] = relationship(back_populates="tarefa", secondary=recurso_tarefa)
+    recursos: Mapped[list['Recurso']] = relationship(back_populates="tarefas", secondary=recurso_tarefa)
 
     def __repr__(self):
         return str(self.nome)

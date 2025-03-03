@@ -6,12 +6,15 @@ from sheets import Planilha
 def popular_db_pericias(numero: int) -> None:
     pla = Planilha()
 
+    recmap: dict[str, Recurso] = {}
+
     #Cadastrar recursos
     for it in pla.get_recursos():
-        for _ in range(it.quantidade):
-            rec = Recurso()
-            rec.nome = it.nome
-            db_session.add(rec)
+        rec = Recurso()
+        rec.nome = it.nome
+        rec.quantidade = it.quantidade
+        recmap[it.nome] = rec
+        db_session.add(rec)
     db_session.commit()
 
     for pericia in db_session.query(Pericia).all():
@@ -27,7 +30,8 @@ def popular_db_pericias(numero: int) -> None:
                 tarefa.nome = item.tarefa
                 tarefa.duracao = item.duracao.seconds
                 tarefa.ordem = i
-                tarefa.recursos_necessarios = item.recursos
+                for recname in item.recursos:
+                    tarefa.recursos.append(recmap[recname])
                 objeto.tarefas.append(tarefa)
             pericia.objetos.append(objeto)
         db_session.add(pericia)
