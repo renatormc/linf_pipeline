@@ -37,6 +37,8 @@ class Pericia(Base):
     __tablename__ = 'pericia'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     objetos: Mapped[list['Objeto']] = relationship(back_populates="pericia", cascade="all, delete-orphan")
+    comeco: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    fim: Mapped[datetime | None] = mapped_column(sa.DateTime)
     perito_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("perito.id"))
     perito: Mapped[Optional['Perito']] = relationship(back_populates="pericias", uselist=False)
 
@@ -49,6 +51,8 @@ class Objeto(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     tipo: Mapped[str] = mapped_column(sa.String(100))
     subtipo: Mapped[str] = mapped_column(sa.String(100))
+    comeco: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    fim: Mapped[datetime | None] = mapped_column(sa.DateTime)
     pericia_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("pericia.id"))
     pericia: Mapped['Pericia'] = relationship(back_populates="objetos", uselist=False)
     tarefas: Mapped[list['Tarefa']] = relationship(back_populates="objeto", cascade="all, delete-orphan")

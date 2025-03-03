@@ -1,8 +1,7 @@
 from datetime import datetime
 import click
-
+from simulation import simular_atual
 from pericia_generator import popular_db_pericias
-from simulation import interval_iterator
 
 
 @click.group()
@@ -16,10 +15,9 @@ def gerar_pericias() -> None:
     popular_db_pericias(500)
 
 
-@cli.command("simulate")
+@cli.command("simular")
 def simulate() -> None:
-    for t in interval_iterator(datetime(2025, 3, 2, 0, 0, 0), datetime(2025, 3, 2, 23, 59, 59)):
-        print(t)
+    simular_atual()
 
 
 if __name__ == '__main__':

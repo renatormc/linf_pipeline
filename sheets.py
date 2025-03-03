@@ -11,11 +11,13 @@ class TarefaData:
     tarefa: str
     duracao: timedelta
     recursos: list[str]
-    
+
+
 @dataclass
 class RecursoData:
     nome: str
     quantidade: int
+
 
 class Planilha:
     def __init__(self) -> None:
@@ -51,7 +53,7 @@ class Planilha:
         self.df_tarefas['Recurso 3'] = self.df_tarefas['Recurso 3'].fillna('')
         self.df_tarefas['Recurso 4'] = self.df_tarefas['Recurso 4'].fillna('')
         self.df_tarefas.columns = self.df_tarefas.columns.str.strip()
-        
+
         self.df_recursos = pd.read_excel(xls, 'recursos')
         self.df_recursos.columns = self.df_recursos.columns.str.strip()
 
@@ -63,7 +65,7 @@ class Planilha:
 
     def gerar_subtipo_objeto(self, tipo: str) -> str:
         return random.choices(self.values_subtipo[tipo], self.probabilidades_subtipo[tipo])[0]
-    
+
     def extract_tarefa(self, row: pd.Series) -> TarefaData:
         reclist: list[str] = [row['Recurso 1'].strip(), row['Recurso 2'].strip(), row['Recurso 3'].strip(), row['Recurso 4'].strip()]
         return TarefaData(
@@ -78,10 +80,18 @@ class Planilha:
             ),
             [rec for rec in reclist if rec != '']
         )
-        
+
     def get_recursos(self) -> list[RecursoData]:
         return [RecursoData(row['Nome'], row['Quantidade']) for _, row in self.df_recursos.iterrows()]
 
+    def get_peritos(self) -> list[str]:
+        df2 = self.df_recursos[self.df_recursos['Nome'] == 'Perito']
+        if df2.empty:
+            raise Exception('Não há peritos disponíveis')
+        qtd = df2.loc[0, 'Quantidade']
+        assert isinstance(qtd, int)
+        return [f'Perito {i + 1}' for i in range(qtd)]
+        
     def get_tarefas(self, objeto: str, subtipo: str) -> list[TarefaData]:
         df = self.df_tarefas[(self.df_tarefas['Objeto'] == objeto) & (self.df_tarefas['Subtipo'] == subtipo)]
         return [self.extract_tarefa(row) for _, row in df.iterrows()]

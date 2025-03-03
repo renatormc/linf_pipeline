@@ -1,14 +1,20 @@
 from sqlalchemy import delete
-from models import Objeto, Pericia, Recurso, Tarefa, db_session
+from models import Objeto, Pericia, Perito, Recurso, Tarefa, db_session
 from sheets import Planilha
 
 
 def popular_db_pericias(numero: int) -> None:
     pla = Planilha()
 
-    recmap: dict[str, Recurso] = {}
-
+    #cadastrar peritos
+    for nome in pla.get_peritos():
+        perito = Perito()
+        perito.nome = nome
+        db_session.add(perito)
+    db_session.commit()
+    
     #Cadastrar recursos
+    recmap: dict[str, Recurso] = {}
     for it in pla.get_recursos():
         rec = Recurso()
         rec.nome = it.nome
