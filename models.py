@@ -16,11 +16,10 @@ db_session = scoped_session(SessionMaker)
 class Base(DeclarativeBase):
     pass
 
-
-recurso_tarefa = sa.Table('recurso_tarefa', Base.metadata,
-                          sa.Column('recurso', sa.Integer, sa.ForeignKey('recurso.id'), nullable=False),
+tipo_recurso_tarefa = sa.Table('tipo_recurso_tarefa', Base.metadata,
+                          sa.Column('tipo_recurso', sa.Integer, sa.ForeignKey('tipo_recurso.id'), nullable=False),
                           sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
-                          sa.PrimaryKeyConstraint('recurso', 'tarefa'))
+                          sa.PrimaryKeyConstraint('tipo_recurso', 'tarefa'))
 
 
 class Perito(Base):
@@ -71,22 +70,35 @@ class Tarefa(Base):
     ordem: Mapped[int] = mapped_column(sa.Integer)
     objeto_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("objeto.id"))
     objeto: Mapped['Objeto'] = relationship(back_populates="tarefas", uselist=False)
-    recursos: Mapped[list['Recurso']] = relationship(back_populates="tarefas", secondary=recurso_tarefa)
+    recursos: Mapped[list['Recurso']] = relationship(back_populates="tarefa")
+    recursos_necessarios: Mapped[list['TipoRecurso']] = relationship(secondary=tipo_recurso_tarefa, back_populates="tarefas")
 
     def __repr__(self):
         return str(self.nome)
+
+
+class TipoRecurso(Base):
+    __tablename__ = 'tipo_recurso'
+    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    nome: Mapped[str] = mapped_column(sa.String(100))
+    recursos: Mapped[list['Recurso']] = relationship(back_populates="tipo", cascade="all, delete-orphan")
+    tarefas: Mapped[list['Tarefa']] = relationship( secondary=tipo_recurso_tarefa, back_populates="recursos_necessarios")
+
+    def __repr__(self):
+        return self.nome
 
 
 class Recurso(Base):
     __tablename__ = 'recurso'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(sa.String(100))
-    quantidade: Mapped[int] = mapped_column(sa.Integer)
-    quantidade_ocupado: Mapped[int] = mapped_column(sa.Integer, default=0)
-    tarefas: Mapped['Tarefa'] = relationship(back_populates="recursos", secondary=recurso_tarefa)
+    tipo_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("tipo_recurso.id"))
+    tipo: Mapped['TipoRecurso'] = relationship(back_populates="recursos", uselist=False)
+    tarefa_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("tarefa.id"))
+    tarefa: Mapped[Optional['Tarefa']] = relationship(back_populates="recursos", uselist=False)
 
     def __repr__(self):
-        return str(self.id)
+        return self.nome
 
 
 Base.metadata.create_all(engine)

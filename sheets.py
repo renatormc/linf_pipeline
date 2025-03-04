@@ -89,7 +89,6 @@ class Planilha:
         if df2.empty:
             raise Exception('Não há peritos disponíveis')
         qtd = df2.loc[0, 'Quantidade']
-        assert isinstance(qtd, int)
         return [f'Perito {i + 1}' for i in range(qtd)]
         
     def get_tarefas(self, objeto: str, subtipo: str) -> list[TarefaData]:

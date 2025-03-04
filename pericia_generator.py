@@ -1,5 +1,5 @@
 from sqlalchemy import delete
-from models import Objeto, Pericia, Perito, Recurso, Tarefa, db_session
+from models import Objeto, Pericia, Perito, Recurso, Tarefa, TipoRecurso, db_session
 from sheets import Planilha
 
 
@@ -14,13 +14,17 @@ def popular_db_pericias(numero: int) -> None:
     db_session.commit()
     
     #Cadastrar recursos
-    recmap: dict[str, Recurso] = {}
+    recmap: dict[str, TipoRecurso] = {}
     for it in pla.get_recursos():
-        rec = Recurso()
-        rec.nome = it.nome
-        rec.quantidade = it.quantidade
-        recmap[it.nome] = rec
-        db_session.add(rec)
+        tipo_recurso = TipoRecurso()
+        tipo_recurso.nome = it.nome
+        db_session.add(tipo_recurso)
+        recmap[it.nome] = tipo_recurso
+        for i in range(it.quantidade):
+            recurso = Recurso()
+            recurso.tipo = tipo_recurso
+            recurso.nome = f"{it.nome} {i + 1}"
+            db_session.add(recurso)
     db_session.commit()
 
     for pericia in db_session.query(Pericia).all():
@@ -36,8 +40,8 @@ def popular_db_pericias(numero: int) -> None:
                 tarefa.nome = item.tarefa
                 tarefa.duracao = item.duracao.seconds
                 tarefa.ordem = i
-                for recname in item.recursos:
-                    tarefa.recursos.append(recmap[recname])
+                for rec in item.recursos:
+                    tarefa.recursos_necessarios.append(recmap[rec])
                 objeto.tarefas.append(tarefa)
             pericia.objetos.append(objeto)
         db_session.add(pericia)
