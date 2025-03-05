@@ -1,27 +1,29 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Literal
 import pandas as pd
 import random
 
 
 @dataclass
-class TarefaData:
+class EtapaData:
     objeto: str
     subtipo: str
-    tarefa: str
-    duracao: timedelta
-    recursos: list[str]
-
+    etapa: str
+    tempo_minimo: timedelta
+    
 
 @dataclass
-class RecursoData:
+class TipoEtapaData:
     nome: str
-    quantidade: int
+    buffer: int
+    vagas: int
+    grupo: Literal['pericia', 'objeto']
 
 
 class Planilha:
     def __init__(self) -> None:
-        xls = pd.ExcelFile('dados.xlsx')
+        xls = pd.ExcelFile('dados.ods', engine="odf")
 
         df_stat_qtd_objetos = pd.read_excel(xls, 'estatistica_qtd_objetos')
         df_stat_qtd_objetos.columns = df_stat_qtd_objetos.columns.str.strip()
@@ -47,16 +49,13 @@ class Planilha:
             total = df2['Quantidade'].sum()
             self.probabilidades_subtipo[tipo] = list(map(lambda x: x/total, list(df2['Quantidade'])))
 
-        self.df_tarefas = pd.read_excel(xls, 'tarefas')
-        self.df_tarefas['Recurso 1'] = self.df_tarefas['Recurso 1'].fillna('')
-        self.df_tarefas['Recurso 2'] = self.df_tarefas['Recurso 2'].fillna('')
-        self.df_tarefas['Recurso 3'] = self.df_tarefas['Recurso 3'].fillna('')
-        self.df_tarefas['Recurso 4'] = self.df_tarefas['Recurso 4'].fillna('')
-        self.df_tarefas.columns = self.df_tarefas.columns.str.strip()
+        self.df_etapas = pd.read_excel(xls, 'etapas')
+        self.df_etapas.columns = self.df_etapas.columns.str.strip()
 
-        self.df_recursos = pd.read_excel(xls, 'recursos')
-        self.df_recursos.columns = self.df_recursos.columns.str.strip()
+        self.df_exames = pd.read_excel(xls, 'exames')
+        self.df_exames.columns = self.df_exames.columns.str.strip()
 
+        
     def gerar_qtd_objetos(self) -> int:
         return random.choices(self.values_qtd_objetos, self.probabilites_qtd_objetos)[0]
 
@@ -66,31 +65,23 @@ class Planilha:
     def gerar_subtipo_objeto(self, tipo: str) -> str:
         return random.choices(self.values_subtipo[tipo], self.probabilidades_subtipo[tipo])[0]
 
-    def extract_tarefa(self, row: pd.Series) -> TarefaData:
-        reclist: list[str] = [row['Recurso 1'].strip(), row['Recurso 2'].strip(), row['Recurso 3'].strip(), row['Recurso 4'].strip()]
-        return TarefaData(
+    def extrair_etapa(self, row: pd.Series) -> EtapaData:
+        return EtapaData(
             row['Objeto'],
             row['Subtipo'],
-            row['Tarefa'],
+            row['Etapa'],
             timedelta(
-                hours=row['Duração'].hour,
-                minutes=row['Duração'].minute,
-                seconds=row['Duração'].second,
-                microseconds=row['Duração'].microsecond
+                hours=row['Tempo mínimo'].hour,
+                minutes=row['Tempo mínimo'].minute,
+                seconds=row['Tempo mínimo'].second,
+                microseconds=row['Tempo mínimo'].microsecond
             ),
-            [rec for rec in reclist if rec != '']
         )
 
-    def get_recursos(self) -> list[RecursoData]:
-        return [RecursoData(row['Nome'], row['Quantidade']) for _, row in self.df_recursos.iterrows()]
+    def get_tipos_etapa(self) -> list[TipoEtapaData]:
+        return [TipoEtapaData(nome=row['Etapa'], vagas=row['Vagas'], buffer=row['Buffer'], grupo=row['Grupo']) for _, row in self.df_etapas.iterrows()]
 
-    def get_peritos(self) -> list[str]:
-        df2 = self.df_recursos[self.df_recursos['Nome'] == 'Perito']
-        if df2.empty:
-            raise Exception('Não há peritos disponíveis')
-        qtd = df2.loc[0, 'Quantidade']
-        return [f'Perito {i + 1}' for i in range(qtd)]
-        
-    def get_tarefas(self, objeto: str, subtipo: str) -> list[TarefaData]:
-        df = self.df_tarefas[(self.df_tarefas['Objeto'] == objeto) & (self.df_tarefas['Subtipo'] == subtipo)]
-        return [self.extract_tarefa(row) for _, row in df.iterrows()]
+
+    def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:
+        df = self.df_exames[(self.df_exames['Objeto'] == objeto) & (self.df_exames['Subtipo'] == subtipo)]
+        return [self.extrair_etapa(row) for _, row in df.iterrows()]

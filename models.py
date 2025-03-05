@@ -18,10 +18,10 @@ class Base(DeclarativeBase):
     pass
 
 
-tipo_recurso_tarefa = sa.Table('tipo_recurso_tarefa', Base.metadata,
-                               sa.Column('tipo_recurso', sa.Integer, sa.ForeignKey('tipo_recurso.id'), nullable=False),
-                               sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
-                               sa.PrimaryKeyConstraint('tipo_recurso', 'tarefa'))
+# tipo_recurso_tarefa = sa.Table('tipo_recurso_tarefa', Base.metadata,
+#                                sa.Column('tipo_recurso', sa.Integer, sa.ForeignKey('tipo_recurso.id'), nullable=False),
+#                                sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
+#                                sa.PrimaryKeyConstraint('tipo_recurso', 'tarefa'))
 
 
 class Perito(Base):
@@ -67,6 +67,7 @@ class TipoEtapa(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(sa.String(100))
     tamanho_buffer: Mapped[int] = mapped_column(sa.Integer)
+    vagas: Mapped[int] = mapped_column(sa.Integer)
     etapas: Mapped[list['Etapa']] = relationship(back_populates="tipo", cascade="all, delete-orphan")
 
     def __repr__(self):
