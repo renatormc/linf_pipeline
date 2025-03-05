@@ -1,5 +1,5 @@
 from sqlalchemy import delete
-from models import Objeto, Pericia, Perito, Recurso, Tarefa, TipoRecurso, db_session
+from models import Objeto, Pericia, Perito,  Etapa,  db_session
 from sheets import Planilha
 
 
@@ -36,7 +36,7 @@ def popular_db_pericias(numero: int) -> None:
             tipo = pla.gerar_tipo_objeto()
             objeto = Objeto(tipo=tipo, subtipo=pla.gerar_subtipo_objeto(tipo))
             for i, item in enumerate(pla.get_tarefas(objeto.tipo, objeto.subtipo)):
-                tarefa = Tarefa()
+                tarefa = Etapa()
                 tarefa.nome = item.tarefa
                 tarefa.duracao = item.duracao.seconds
                 tarefa.ordem = i

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy import and_
 from typing import Iterable, Iterator
-from models import Objeto, Pericia, Recurso, Tarefa, TipoRecurso, db_session
+from models import Objeto, Pericia, Recurso, Etapa, TipoRecurso, db_session
 from models import Perito
 import time
 
@@ -31,14 +31,14 @@ def get_recursos_disponiveis() -> Iterable[Recurso]:
     return query.all()
 
 
-def get_tarefa_com_recursos_disponiveis() -> Tarefa | None:
-    query = db_session.query(Tarefa).where(
-        ~Tarefa.recursos_necessarios.any(~TipoRecurso.recursos.any(Recurso.tarefa_id == None))
-    ).join(Tarefa.objeto).join(Objeto.pericia).order_by(Pericia.id)
+def get_tarefa_com_recursos_disponiveis() -> Etapa | None:
+    query = db_session.query(Etapa).where(
+        ~Etapa.recursos_necessarios.any(~TipoRecurso.recursos.any(Recurso.tarefa_id == None))
+    ).join(Etapa.objeto).join(Objeto.pericia).order_by(Pericia.id)
     return query.first()
 
 
-def iniciar_tarefa(tarefa: Tarefa, current_time: datetime) -> None:
+def iniciar_tarefa(tarefa: Etapa, current_time: datetime) -> None:
     print(f"Iniciando tarefa {tarefa.nome}")
     for tipo in tarefa.recursos_necessarios:
         recurso = db_session.query(Recurso).where(
@@ -54,8 +54,8 @@ def iniciar_tarefa(tarefa: Tarefa, current_time: datetime) -> None:
 
 
 def checar_tarefas_finalizadas(current_time: datetime) -> None:
-    query = db_session.query(Tarefa).where(
-        Tarefa.fim <= current_time
+    query = db_session.query(Etapa).where(
+        Etapa.fim <= current_time
     )
     for tarefa in query.all():
         for recurso in tarefa.recursos:

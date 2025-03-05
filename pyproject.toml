@@ -8,6 +8,7 @@ dependencies = [
     "click>=8.1.8",
     "openpyxl>=3.1.5",
     "pandas>=2.2.3",
+    "sqlalchemy-utils>=0.41.2",
     "sqlalchemy[mypy]>=2.0.38",
 ]
 
@@ -15,4 +16,5 @@ dependencies = [
 dev = [
     "mypy>=1.15.0",
     "pandas-stubs>=2.2.3.241126",
+    "types-sqlalchemy-utils>=1.1.0",
 ]
