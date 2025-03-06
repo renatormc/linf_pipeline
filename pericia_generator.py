@@ -1,4 +1,4 @@
-from models import Objeto, Pericia, Perito,  Etapa, Equipamento,  db_session
+from models import Objeto, Pericia, Perito,  Equipamento,  db_session
 from sheets import Planilha
 
 
@@ -21,7 +21,7 @@ def popular_db_pericias(numero: int) -> None:
         equipamento = Equipamento()
         equipamento.nome = eq.nome  
         equipamento.buffer = eq.buffer
-        equipamento.quantidade = eq.quantidade
+        equipamento.capacidade = eq.quantidade
         eqmap[eq.nome] = equipamento
         db_session.add(equipamento)
     db_session.commit()
@@ -35,17 +35,9 @@ def popular_db_pericias(numero: int) -> None:
             objeto = Objeto()
             objeto.tipo = pla.gerar_tipo_objeto()
             objeto.subtipo = pla.gerar_subtipo_objeto(objeto.tipo)
-            for i, item in enumerate(pla.get_etapas(objeto.tipo, objeto.subtipo)):
-                if i == 0:
-                    objeto.proxima_etapa = item.etapa
-                etapa = Etapa()
-                etapa.nome = item.etapa
-                etapa.duracao = item.tempo_minimo
-                etapa.ordem = i
-                etapa.equipamento = eqmap[item.etapa]
-                etapa.objeto = objeto
-                db_session.add(etapa)
-
+            objeto.etapas = [item.etapa for item in pla.get_etapas(objeto.tipo, objeto.subtipo)]
+            objeto.status = "AGUARDANDO_PROXIMA_ETAPA"
+            objeto.proxima_etapa = objeto.etapas[0]
             pericia.objetos.append(objeto)
         db_session.add(pericia)
     db_session.commit()
