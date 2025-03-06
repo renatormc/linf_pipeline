@@ -1,4 +1,3 @@
-from sqlalchemy import delete
 from models import Objeto, Pericia, Perito,  Etapa, Equipamento,  db_session
 from sheets import Planilha
 
@@ -37,6 +36,8 @@ def popular_db_pericias(numero: int) -> None:
             objeto.tipo = pla.gerar_tipo_objeto()
             objeto.subtipo = pla.gerar_subtipo_objeto(objeto.tipo)
             for i, item in enumerate(pla.get_etapas(objeto.tipo, objeto.subtipo)):
+                if i == 0:
+                    objeto.proxima_etapa = item.etapa
                 etapa = Etapa()
                 etapa.nome = item.etapa
                 etapa.duracao = item.tempo_minimo
@@ -44,6 +45,7 @@ def popular_db_pericias(numero: int) -> None:
                 etapa.equipamento = eqmap[item.etapa]
                 etapa.objeto = objeto
                 db_session.add(etapa)
+
             pericia.objetos.append(objeto)
         db_session.add(pericia)
     db_session.commit()
