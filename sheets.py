@@ -14,16 +14,16 @@ class EtapaData:
     
 
 @dataclass
-class TipoEtapaData:
+class EquipamentoData:
     nome: str
     buffer: int
-    vagas: int
-    grupo: Literal['pericia', 'objeto']
+    quantidade: int
+   
 
 
 class Planilha:
     def __init__(self) -> None:
-        xls = pd.ExcelFile('dados.ods', engine="odf")
+        xls = pd.ExcelFile('dados.xlsx')
 
         df_stat_qtd_objetos = pd.read_excel(xls, 'estatistica_qtd_objetos')
         df_stat_qtd_objetos.columns = df_stat_qtd_objetos.columns.str.strip()
@@ -49,8 +49,8 @@ class Planilha:
             total = df2['Quantidade'].sum()
             self.probabilidades_subtipo[tipo] = list(map(lambda x: x/total, list(df2['Quantidade'])))
 
-        self.df_etapas = pd.read_excel(xls, 'etapas')
-        self.df_etapas.columns = self.df_etapas.columns.str.strip()
+        self.df_equipamentos = pd.read_excel(xls, 'equipamentos')
+        self.df_equipamentos.columns = self.df_equipamentos.columns.str.strip()
 
         self.df_exames = pd.read_excel(xls, 'exames')
         self.df_exames.columns = self.df_exames.columns.str.strip()
@@ -70,16 +70,11 @@ class Planilha:
             row['Objeto'],
             row['Subtipo'],
             row['Etapa'],
-            timedelta(
-                hours=row['Tempo mínimo'].hour,
-                minutes=row['Tempo mínimo'].minute,
-                seconds=row['Tempo mínimo'].second,
-                microseconds=row['Tempo mínimo'].microsecond
-            ),
+            pd.to_timedelta(row['Tempo mínimo'])
         )
 
-    def get_tipos_etapa(self) -> list[TipoEtapaData]:
-        return [TipoEtapaData(nome=row['Etapa'], vagas=row['Vagas'], buffer=row['Buffer'], grupo=row['Grupo']) for _, row in self.df_etapas.iterrows()]
+    def get_equipamentos(self) -> list[EquipamentoData]:
+        return [EquipamentoData(nome=row['Nome'], quantidade=row['Quantidade'], buffer=row['Buffer']) for _, row in self.df_equipamentos.iterrows()]
 
 
     def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:

@@ -26,9 +26,8 @@ def get_perito_disponivel() -> Perito | None:
     return query.first()
 
 
-# def get_recursos_disponiveis() -> Iterable[Recurso]:
-#     query = db_session.query(Recurso).where(Recurso.tarefa_id == None)
-#     return query.all()
+
+
 
 
 # def get_tarefa_com_recursos_disponiveis() -> Etapa | None:

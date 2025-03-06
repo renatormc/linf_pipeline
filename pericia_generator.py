@@ -1,5 +1,5 @@
 from sqlalchemy import delete
-from models import Objeto, Pericia, Perito,  Etapa, TipoEtapa,  db_session
+from models import Objeto, Pericia, Perito,  Etapa, Equipamento,  db_session
 from sheets import Planilha
 
 
@@ -17,14 +17,14 @@ def popular_db_pericias(numero: int) -> None:
     db_session.commit()
 
     # cadastrar tipos etapa
-    etapasmap: dict[str, TipoEtapa] = {}
-    for te in pla.get_tipos_etapa():
-        tipo = TipoEtapa()
-        tipo.nome = te.nome
-        tipo.vagas = te.vagas
-        tipo.tamanho_buffer = te.buffer
-        etapasmap[tipo.nome] = tipo
-        db_session.add(tipo)
+    eqmap: dict[str, Equipamento] = {}
+    for eq in pla.get_equipamentos():
+        equipamento = Equipamento()
+        equipamento.nome = eq.nome  
+        equipamento.buffer = eq.buffer
+        equipamento.quantidade = eq.quantidade
+        eqmap[eq.nome] = equipamento
+        db_session.add(equipamento)
     db_session.commit()
 
     for pericia in db_session.query(Pericia).all():
@@ -39,9 +39,9 @@ def popular_db_pericias(numero: int) -> None:
             for i, item in enumerate(pla.get_etapas(objeto.tipo, objeto.subtipo)):
                 etapa = Etapa()
                 etapa.nome = item.etapa
-                etapa.duracao = item.tempo_minimo.seconds
+                etapa.duracao = item.tempo_minimo
                 etapa.ordem = i
-                etapa.tipo = etapasmap[item.etapa]
+                etapa.equipamento = eqmap[item.etapa]
                 etapa.objeto = objeto
                 db_session.add(etapa)
             pericia.objetos.append(objeto)

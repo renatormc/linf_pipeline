@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal, Optional
 from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
-from sqlalchemy_utils import observes
+from sqlalchemy.types import TypeDecorator, Float
 import sqlalchemy as sa
 import config
 
@@ -17,12 +17,16 @@ db_session = scoped_session(SessionMaker)
 class Base(DeclarativeBase):
     pass
 
+class TimedeltaAsSeconds(TypeDecorator):
+    impl = Float
 
-# tipo_recurso_tarefa = sa.Table('tipo_recurso_tarefa', Base.metadata,
-#                                sa.Column('tipo_recurso', sa.Integer, sa.ForeignKey('tipo_recurso.id'), nullable=False),
-#                                sa.Column('tarefa', sa.Integer, sa.ForeignKey('tarefa.id'), nullable=False),
-#                                sa.PrimaryKeyConstraint('tipo_recurso', 'tarefa'))
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return int(value.total_seconds())
 
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return timedelta(seconds=value)
 
 class Perito(Base):
     __tablename__ = 'perito'
@@ -54,6 +58,9 @@ class Objeto(Base):
     subtipo: Mapped[str] = mapped_column(sa.String(100))
     comeco: Mapped[datetime | None] = mapped_column(sa.DateTime)
     fim: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    etapa: Mapped[int] = mapped_column(sa.Integer, default=0)
+    proxima_etapa: Mapped[str | None] = mapped_column(sa.String(100))
+    ultima_etapa: Mapped[int] = mapped_column(sa.Integer, default=0)
     pericia_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("pericia.id"))
     pericia: Mapped['Pericia'] = relationship(back_populates="objetos", uselist=False)
     etapas: Mapped[list['Etapa']] = relationship(back_populates="objeto", cascade="all, delete-orphan")
@@ -62,13 +69,15 @@ class Objeto(Base):
         return f"{self.tipo} - {self.subtipo}"
 
 
-class TipoEtapa(Base):
-    __tablename__ = 'tipo_etapa'
+
+class Equipamento(Base):
+    __tablename__ = 'equipamento'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(sa.String(100))
-    tamanho_buffer: Mapped[int] = mapped_column(sa.Integer)
-    vagas: Mapped[int] = mapped_column(sa.Integer)
-    etapas: Mapped[list['Etapa']] = relationship(back_populates="tipo", cascade="all, delete-orphan")
+    buffer: Mapped[int] = mapped_column(sa.Integer)
+    quantidade: Mapped[int] = mapped_column(sa.Integer)
+    quantidade_ocupada: Mapped[int] = mapped_column(sa.Integer, default=0)
+    etapas: Mapped[list['Etapa']] = relationship(back_populates="equipamento", cascade="all, delete-orphan")
 
     def __repr__(self):
         return self.nome
@@ -81,54 +90,16 @@ class Etapa(Base):
     __tablename__ = 'etapa'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(sa.String(100))
-    entrada_buffer: Mapped[datetime | None] = mapped_column(sa.DateTime)
-    comeco: Mapped[datetime | None] = mapped_column(sa.DateTime)
-    fim: Mapped[datetime | None] = mapped_column(sa.DateTime)
-    duracao: Mapped[int] = mapped_column(sa.Integer)
-    status: Mapped[EstapaStatus] = mapped_column(sa.String(100), default="PENDENTE")
+    duracao: Mapped[timedelta] = mapped_column(TimedeltaAsSeconds)
     ordem: Mapped[int] = mapped_column(sa.Integer)
     objeto_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("objeto.id"))
     objeto: Mapped['Objeto'] = relationship(back_populates="etapas", uselist=False)
-    tipo_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("tipo_etapa.id"))
-    tipo: Mapped['TipoEtapa'] = relationship(back_populates="etapas", uselist=False)
+    equipamento_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("equipamento.id"))
+    equipamento: Mapped['Equipamento'] = relationship(back_populates="etapas", uselist=False)
 
-    @observes("entrada_buffer", "comeco", "fim")
-    def _update_status(self, entrada_buffer: datetime, comeco: datetime, fim: datetime) -> None:
-        if entrada_buffer is not None:
-            self.status = "BUFFER"
-        elif comeco is not None:
-            self.status = "EXECUTANDO"
-        elif fim is not None:
-            self.status = "FINALIZADA"
-        else:
-            self.status = "PENDENTE"
-
+          
     def __repr__(self):
         return self.nome
-
-
-# class TipoRecurso(Base):
-#     __tablename__ = 'tipo_recurso'
-#     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-#     nome: Mapped[str] = mapped_column(sa.String(100))
-#     recursos: Mapped[list['Recurso']] = relationship(back_populates="tipo", cascade="all, delete-orphan")
-#     tarefas: Mapped[list['Etapa']] = relationship(secondary=tipo_recurso_tarefa, back_populates="recursos_necessarios")
-
-#     def __repr__(self):
-#         return self.nome
-
-
-# class Recurso(Base):
-#     __tablename__ = 'recurso'
-#     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-#     nome: Mapped[str] = mapped_column(sa.String(100))
-#     tipo_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("tipo_recurso.id"))
-#     tipo: Mapped['TipoRecurso'] = relationship(back_populates="recursos", uselist=False)
-#     tarefa_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("tarefa.id"))
-#     tarefa: Mapped[Optional['Etapa']] = relationship(back_populates="recursos", uselist=False)
-
-#     def __repr__(self):
-#         return self.nome
 
 
 Base.metadata.create_all(engine)
