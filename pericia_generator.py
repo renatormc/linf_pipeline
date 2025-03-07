@@ -20,7 +20,7 @@ def popular_db_pericias(numero: int) -> None:
     for eq in pla.get_equipamentos():
         equipamento = Equipamento()
         equipamento.nome = eq.nome  
-        equipamento.buffer = eq.buffer
+        equipamento._buffer = eq.buffer
         equipamento.capacidade = eq.quantidade
         eqmap[eq.nome] = equipamento
         db_session.add(equipamento)
