@@ -38,10 +38,12 @@ def popular_db_pericias(numero: int) -> None:
             objeto.subtype = pla.gerar_subtipo_objeto(objeto.type)
             steps: list[Step] = []
             for i, item in enumerate(pla.get_etapas(objeto.type, objeto.subtype)):
-                if i > 0:
-                    steps[i-1].next_step = item.etapa
                 step = Step()
-                step.equipment = eqmap[item.etapa]
+                step.name = item.etapa
+                if i > 0:
+                    objeto.next_step = item.etapa
+                    steps[i-1].next_step = item.etapa
+                    step.previous_step = steps[i-1].name
                 step.object = objeto
                 step.order = i
                 step.duration = item.tempo_minimo

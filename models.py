@@ -56,7 +56,7 @@ class Case(Base):
         return str(self.id)
 
 
-# StatusObjeto = Literal["BUFFER", "EXECUTANDO", "AGUARDANDO_PROXIMA_ETAPA", "FINALIZADO"]
+StatusObjeto = Literal["BUFFER", "EXECUTING", "INITIAL", "FINISHED"]
 
 
 class Object(Base):
@@ -64,9 +64,15 @@ class Object(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     type: Mapped[str] = mapped_column(sa.String(100))
     subtype: Mapped[str] = mapped_column(sa.String(100))
+    status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="INITIAL")
+    current_step: Mapped[str | None] = mapped_column(sa.String(100))
+    next_step: Mapped[str | None] = mapped_column(sa.String(100))
+    duration_current_step: Mapped[timedelta | None] = mapped_column(TimedeltaAsSeconds)
+    start_current_step_executing: Mapped[datetime | None] = mapped_column(sa.DateTime)
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
     case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)
     steps: Mapped[list['Step']] = relationship(back_populates="object", cascade="all, delete-orphan", order_by="Step.order.asc()")
+    
 
     def __repr__(self):
         return f"{self.type} - {self.subtype}"
@@ -79,11 +85,7 @@ class Equipment(Base):
     buffer: Mapped[int] = mapped_column(sa.Integer)
     capacity: Mapped[int] = mapped_column(sa.Integer)
     order: Mapped[int] = mapped_column(sa.Integer)
-    waiting: Mapped[int] = mapped_column(sa.Integer, default=0)
-    executing: Mapped[int] = mapped_column(sa.Integer, default=0)
-    steps: Mapped[list['Step']] = relationship(back_populates="equipment")
-
-
+    
     def __repr__(self):
         return self.name
 
@@ -91,16 +93,14 @@ class Equipment(Base):
 class Step(Base):
     __tablename__ = 'step'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    start_wating: Mapped[datetime | None] = mapped_column(sa.DateTime)
-    start: Mapped[datetime | None] = mapped_column(sa.DateTime)
-    end: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    name: Mapped[str] = mapped_column(sa.String(100))
     order: Mapped[int] = mapped_column(sa.Integer)
-    next_step: Mapped[str | None] = mapped_column(sa.String(100))
     duration: Mapped[timedelta] = mapped_column(TimedeltaAsSeconds)
+    next_step: Mapped[str | None] = mapped_column(sa.String)
+    previous_step: Mapped[str | None] = mapped_column(sa.String)
     object_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("object.id"))
     object: Mapped['Object'] = relationship(back_populates="steps", uselist=False)
-    equipment_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("equipment.id"))
-    equipment: Mapped['Equipment'] = relationship(back_populates="steps")
+   
 
 
     def __repr__(self):
