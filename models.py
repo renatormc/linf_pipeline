@@ -64,36 +64,9 @@ class Object(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     type: Mapped[str] = mapped_column(sa.String(100))
     subtype: Mapped[str] = mapped_column(sa.String(100))
-    # status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="AGUARDANDO_PROXIMA_ETAPA")
-    # etapa: Mapped[str | None] = mapped_column(sa.String(100))
-    
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
     case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)
     steps: Mapped[list['Step']] = relationship(back_populates="object", cascade="all, delete-orphan", order_by="Step.order.asc()")
-    
-    
-    # def atualizar_status(self, time: datetime) -> None:
-    #     if self.etapa == None and self.proxima_etapa is None:
-    #         self.status = "FINALIZADO"
-    #     elif self.fim_etapa_corrente is None:
-    #         self.status = "BUFFER"
-    #     elif self.fim_etapa_corrente > time:
-    #         self.status = "EXECUTANDO"
-    #     else:
-    #         self.status = "AGUARDANDO_PROXIMA_ETAPA"
-        
-
-    # def etapa_depois(self, etapa: str) -> str | None:
-    #     try:
-    #         return self.etapas[self.etapas.index(etapa) + 1]
-    #     except IndexError:
-    #         return None
-
-    # @observes("etapa")
-    # def _etapa_changed(self, etapa: str) -> None:
-    #     self.proxima_etapa = self.etapa_depois(etapa)
-        
-      
 
     def __repr__(self):
         return f"{self.type} - {self.subtype}"
@@ -109,12 +82,12 @@ class Equipment(Base):
     waiting: Mapped[int] = mapped_column(sa.Integer, default=0)
     executing: Mapped[int] = mapped_column(sa.Integer, default=0)
     steps: Mapped[list['Step']] = relationship(back_populates="equipment")
-    
-          
+
+
     def __repr__(self):
         return self.name
-    
-    
+
+
 class Step(Base):
     __tablename__ = 'step'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
@@ -128,10 +101,11 @@ class Step(Base):
     object: Mapped['Object'] = relationship(back_populates="steps", uselist=False)
     equipment_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("equipment.id"))
     equipment: Mapped['Equipment'] = relationship(back_populates="steps")
-    
+
+
     def __repr__(self):
         return str(self.id)
-    
+
 
 Base.metadata.create_all(engine)
 
