@@ -1,43 +1,51 @@
-from models import Objeto, Pericia, Perito,  Equipamento,  db_session
+from models import Step, Object, Case, Worker,  Equipment,  db_session
 from sheets import Planilha
 
 
 def popular_db_pericias(numero: int) -> None:
     pla = Planilha()
 
-    for per in db_session.query(Perito).all():
+    for per in db_session.query(Worker).all():
         db_session.delete(per)
     db_session.commit()
     # cadastrar peritos
     for i in range(12):
-        perito = Perito()
-        perito.nome = f"Perito {i+1}"
+        perito = Worker()
+        perito.name = f"Perito {i+1}"
         db_session.add(perito)
     db_session.commit()
 
-    # cadastrar tipos etapa
-    eqmap: dict[str, Equipamento] = {}
-    for eq in pla.get_equipamentos():
-        equipamento = Equipamento()
-        equipamento.nome = eq.nome  
+    # cadastrar tipos step
+    eqmap: dict[str, Equipment] = {}
+    for i, eq in enumerate(pla.get_equipamentos()):
+        equipamento = Equipment()
+        equipamento.order = i
+        equipamento.name = eq.nome  
         equipamento.buffer = eq.buffer
-        equipamento.capacidade = eq.quantidade
+        equipamento.capacity = eq.quantidade
         eqmap[eq.nome] = equipamento
         db_session.add(equipamento)
     db_session.commit()
 
-    for pericia in db_session.query(Pericia).all():
+    for pericia in db_session.query(Case).all():
         db_session.delete(pericia)
     db_session.commit()
     for _ in range(numero):
-        pericia = Pericia()
+        pericia = Case()
         for i in range(pla.gerar_qtd_objetos()):
-            objeto = Objeto()
-            objeto.tipo = pla.gerar_tipo_objeto()
-            objeto.subtipo = pla.gerar_subtipo_objeto(objeto.tipo)
-            objeto.etapas = [item.etapa for item in pla.get_etapas(objeto.tipo, objeto.subtipo)]
-            objeto.status = "AGUARDANDO_PROXIMA_ETAPA"
-            objeto.proxima_etapa = objeto.etapas[0]
-            pericia.objetos.append(objeto)
+            objeto = Object()
+            objeto.type = pla.gerar_tipo_objeto()
+            objeto.subtype = pla.gerar_subtipo_objeto(objeto.type)
+            steps: list[Step] = []
+            for i, item in enumerate(pla.get_etapas(objeto.type, objeto.subtype)):
+                if i > 0:
+                    steps[i-1].next_step = item.etapa
+                step = Step()
+                step.equipment = eqmap[item.etapa]
+                step.object = objeto
+                step.order = i
+                step.duration = item.tempo_minimo
+                steps.append(step)
+            pericia.objects.append(objeto)
         db_session.add(pericia)
     db_session.commit()
