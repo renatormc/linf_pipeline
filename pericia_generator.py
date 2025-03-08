@@ -21,8 +21,8 @@ def popular_db_pericias(numero: int) -> None:
         equipamento = Equipment()
         equipamento.order = i
         equipamento.name = eq.nome  
-        equipamento.buffer = eq.buffer
-        equipamento.capacity = eq.quantidade
+        equipamento.lenght = eq.quantidade
+        equipamento.capacity = eq.capacidade
         eqmap[eq.nome] = equipamento
         db_session.add(equipamento)
     db_session.commit()

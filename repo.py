@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Iterable
-
+import logging
 from sqlalchemy import and_, or_
 from models import Equipment, Object, Step, db_session
 
@@ -32,13 +32,12 @@ def count_objects_executing(equipment: Equipment) -> int:
 def count_total_objects(equipment: Equipment) -> int:
     query = db_session.query(Object).where(
         Object.current_step == equipment.name,
-        or_(Object.status == "EXECUTING", Object.status == "BUFFER")
     )
     return query.count()
 
 
 def number_of_vacancies(equipment: Equipment) -> int:
-    return equipment.buffer + equipment.buffer - count_total_objects(equipment)
+    return equipment.capacity - count_total_objects(equipment)
 
 
 def move_next_step(object: Object, commit=True) -> None:
@@ -50,6 +49,7 @@ def move_next_step(object: Object, commit=True) -> None:
     object.duration_current_step = next_step.duration
     object.next_step = next_step.next_step
     db_session.add(object)
+    logging.info(f"Moving {object} to {next_step.name}")
     if commit:
         db_session.commit()
 
@@ -63,22 +63,6 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int) -> I
         )
     ).order_by(Object.case_id).limit(limit)
     return query.all()
-
-
-def start_waiting_on_equipment(equipment: Equipment, time: datetime, commit=True) -> None:
-    query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
-        Object.status == "BUFFER"
-    ).limit(equipment.capacity - count_objects_executing(equipment)).order_by(Object.case_id)
-    objects = query.all()
-    for object in objects:
-        print(f"{object.type} entering on buffer of {equipment.name}")
-        object.status = "EXECUTING"
-        object.start_current_step_executing = time
-        db_session.add(object)
-        
-    if commit:
-        db_session.commit()
 
 
 def get_finished_executing(equipment: Equipment, time: datetime) -> list[Object]:

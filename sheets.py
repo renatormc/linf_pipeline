@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Literal
 import pandas as pd
 import random
 
@@ -16,7 +15,7 @@ class EtapaData:
 @dataclass
 class EquipamentoData:
     nome: str
-    buffer: int
+    capacidade: int
     quantidade: int
    
 
@@ -74,7 +73,7 @@ class Planilha:
         )
 
     def get_equipamentos(self) -> list[EquipamentoData]:
-        return [EquipamentoData(nome=row['Nome'], quantidade=row['Quantidade'], buffer=row['Buffer']) for _, row in self.df_equipamentos.iterrows()]
+        return [EquipamentoData(nome=row['Nome'], quantidade=row['Quantidade'], capacidade=row['Capacidade']) for _, row in self.df_equipamentos.iterrows()]
 
 
     def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:

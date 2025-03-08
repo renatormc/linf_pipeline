@@ -1,8 +1,7 @@
-from datetime import datetime
 import click
 from simulation import simular_atual, simular_pipeline
 from pericia_generator import popular_db_pericias
-
+import log
 
 @click.group()
 @click.pass_context
@@ -18,6 +17,7 @@ def gerar_pericias() -> None:
 @cli.command("simular")
 def simulate() -> None:
     # simular_atual()
+    popular_db_pericias(500)
     simular_pipeline()
 
 

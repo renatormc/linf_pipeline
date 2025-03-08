@@ -1,12 +1,9 @@
-queue = []
-queue.append('a')
-queue.append('b')
-queue.append('c')
-print("Initial queue")
-print(queue)
-print("\nElements dequeued from queue")
-print(queue.pop(0))
-print(queue.pop(0))
-print(queue.pop(0))
-print("\nQueue after removing elements")
-print(queue)
+from datetime import datetime, timedelta
+import logging
+
+inicio = datetime(2024, 1, 1, 0, 0, 0)
+fim = datetime(2024, 12, 31, 23, 59, 59)
+delta = timedelta(minutes=5)
+
+res = (fim - inicio)/delta
+logging.info(res)

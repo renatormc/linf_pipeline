@@ -10,6 +10,7 @@ from sqlalchemy_utils import observes
 
 
 engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
+# engine = sa.create_engine("sqlite://")
 
 SessionMaker = sessionmaker(autocommit=False,
                             autoflush=False,
@@ -75,14 +76,14 @@ class Object(Base):
     
 
     def __repr__(self):
-        return f"{self.type} - {self.subtype}"
+        return f"{self.type} {self.id}"
 
 
 class Equipment(Base):
     __tablename__ = 'equipment'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
-    buffer: Mapped[int] = mapped_column(sa.Integer)
+    lenght: Mapped[int] = mapped_column(sa.Integer)
     capacity: Mapped[int] = mapped_column(sa.Integer)
     order: Mapped[int] = mapped_column(sa.Integer)
     

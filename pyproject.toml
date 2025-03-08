@@ -11,6 +11,7 @@ dependencies = [
     "pandas>=2.2.3",
     "sqlalchemy-utils>=0.41.2",
     "sqlalchemy[mypy]>=2.0.38",
+    "tqdm>=4.67.1",
 ]
 
 [dependency-groups]
@@ -18,4 +19,5 @@ dev = [
     "mypy>=1.15.0",
     "pandas-stubs>=2.2.3.241126",
     "types-sqlalchemy-utils>=1.1.0",
+    "types-tqdm>=4.67.0.20250301",
 ]
