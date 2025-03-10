@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Iterable
 import logging
 from sqlalchemy import and_, or_
-from models import Equipment, Object, Step, db_session
+from models import Case, Equipment, Object, Step, db_session
 
 
 def get_object_step(object: Object, name: str) -> Step:
@@ -72,3 +72,16 @@ def get_finished_executing(equipment: Equipment, time: datetime) -> list[Object]
         Object.start_current_step_executing + Object.duration_current_step <= time
     ).order_by(Object.case_id)
     return query.all()
+
+
+def count_finished_cases() -> int:
+    query = db_session.query(Case).where(
+        ~Case.objects.any(Object.status != "FINISHED")
+    )
+    return query.count()
+
+def count_finished_objects() -> int:
+    query = db_session.query(Object).where(
+        Object.status == "FINISHED"
+    )
+    return query.count()

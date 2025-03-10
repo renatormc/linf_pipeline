@@ -9,7 +9,8 @@ import config
 from sqlalchemy_utils import observes
 
 
-engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
+# engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
+engine = sa.create_engine("postgresql://pipeline:pipeline@localhost/pipeline")
 # engine = sa.create_engine("sqlite://")
 
 SessionMaker = sessionmaker(autocommit=False,
@@ -24,6 +25,7 @@ class Base(DeclarativeBase):
 
 class TimedeltaAsSeconds(TypeDecorator):
     impl = Float
+    cache_ok = True
 
     def process_bind_param(self, value, dialect):
         if value is not None:
@@ -68,7 +70,7 @@ class Object(Base):
     status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="INITIAL")
     current_step: Mapped[str | None] = mapped_column(sa.String(100))
     next_step: Mapped[str | None] = mapped_column(sa.String(100))
-    duration_current_step: Mapped[timedelta | None] = mapped_column(TimedeltaAsSeconds)
+    duration_current_step: Mapped[timedelta | None] = mapped_column(sa.Interval)
     start_current_step_executing: Mapped[datetime | None] = mapped_column(sa.DateTime)
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
     case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)

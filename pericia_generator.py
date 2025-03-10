@@ -2,7 +2,7 @@ from models import Step, Object, Case, Worker,  Equipment,  db_session
 from sheets import Planilha
 
 
-def popular_db_pericias(numero: int) -> None:
+def populate_db_cases(numero: int) -> None:
     pla = Planilha()
 
     for per in db_session.query(Worker).all():

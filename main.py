@@ -1,6 +1,6 @@
 import click
 from simulation import simular_atual, simular_pipeline
-from pericia_generator import popular_db_pericias
+from pericia_generator import populate_db_cases
 import log
 
 @click.group()
@@ -9,15 +9,15 @@ def cli(ctx: click.Context) -> None:
     ctx.ensure_object(dict)
 
 
-@cli.command("gerar-pericias")
-def gerar_pericias() -> None:
-    popular_db_pericias(500)
+@cli.command("gen-cases")
+def gen_cases() -> None:
+    populate_db_cases(500)
 
 
-@cli.command("simular")
+@cli.command("simulate")
 def simulate() -> None:
     # simular_atual()
-    popular_db_pericias(500)
+    populate_db_cases(500)
     simular_pipeline()
 
 

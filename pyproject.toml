@@ -9,6 +9,7 @@ dependencies = [
     "odfpy>=1.4.1",
     "openpyxl>=3.1.5",
     "pandas>=2.2.3",
+    "psycopg2>=2.9.10",
     "sqlalchemy-utils>=0.41.2",
     "sqlalchemy[mypy]>=2.0.38",
     "tqdm>=4.67.1",
