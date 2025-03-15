@@ -24,7 +24,7 @@ def count_objects_on_buffer(equipment: Equipment) -> int:
 def count_objects_executing(equipment: Equipment) -> int:
     query = db_session.query(Object).where(
         Object.current_step == equipment.name,
-        Object.status == "EXECUTING"
+        Object.status == "RUNNING"
     )
     return query.count()
 
@@ -58,7 +58,7 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int) -> I
     query = db_session.query(Object).where(
         Object.next_step == equipment.name,
         or_(
-            and_(Object.status == "EXECUTING", Object.start_current_step_executing + Object.duration_current_step <= time),
+            and_(Object.status == "RUNNING", Object.start_current_step_executing + Object.duration_current_step <= time),
             Object.status == "INITIAL"
         )
     ).order_by(Object.case_id).limit(limit)
@@ -68,7 +68,7 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int) -> I
 def get_finished_executing(equipment: Equipment, time: datetime) -> list[Object]:
     query = db_session.query(Object).where(
         Object.current_step == equipment.name,
-        Object.status == "EXECUTING",
+        Object.status == "RUNNING",
         Object.start_current_step_executing + Object.duration_current_step <= time
     ).order_by(Object.case_id)
     return query.all()

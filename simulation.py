@@ -46,7 +46,7 @@ def get_perito_disponivel() -> Worker | None:
 def finish_objects_at_end_step(time: datetime, commit=True) -> None:
     query = db_session.query(Object).where(
         Object.next_step == None,
-        Object.status == "EXECUTING",
+        Object.status == "RUNNING",
         Object.start_current_step_executing + Object.duration_current_step <= time
     )
     for object in query.all():
@@ -67,7 +67,7 @@ def start_executing(equipment: Equipment, time: datetime) -> None:
     ).order_by(Object.case_id).limit(n)
     for object in query.all():
         logging.info(f"Starting executing {object} on {equipment}")
-        object.status == "EXECUTING"
+        object.status = "RUNNING"
         object.start_current_step_executing = time
         db_session.add(object)
     db_session.commit()
@@ -78,7 +78,8 @@ def update_pipeline(time: datetime) -> None:
     query = db_session.query(Equipment).order_by(Equipment.order.desc())
     for equipment in query.all():
         logging.info(f"Analysing equipment {equipment}")
-        objects = get_waiting_equipment(equipment, time, number_of_vacancies(equipment))
+        n = number_of_vacancies(equipment)
+        objects = get_waiting_equipment(equipment, time, n)
         for object in objects:
             move_next_step(object, time)
         start_executing(equipment, time)

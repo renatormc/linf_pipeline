@@ -17,7 +17,7 @@ def gen_cases() -> None:
 @cli.command("simulate")
 def simulate() -> None:
     # simular_atual()
-    populate_db_cases(500)
+    populate_db_cases(3000)
     simular_pipeline()
 
 

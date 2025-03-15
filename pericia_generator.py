@@ -5,6 +5,10 @@ from sheets import Planilha
 def populate_db_cases(numero: int) -> None:
     pla = Planilha()
 
+    for equipment in db_session.query(Equipment).all():
+        db_session.delete(equipment)
+    db_session.commit()
+
     for per in db_session.query(Worker).all():
         db_session.delete(per)
     db_session.commit()
@@ -41,9 +45,10 @@ def populate_db_cases(numero: int) -> None:
                 step = Step()
                 step.name = item.etapa
                 if i > 0:
-                    objeto.next_step = item.etapa
                     steps[i-1].next_step = item.etapa
                     step.previous_step = steps[i-1].name
+                else:
+                    objeto.next_step = item.etapa
                 step.object = objeto
                 step.order = i
                 step.duration = item.tempo_minimo

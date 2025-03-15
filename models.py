@@ -59,7 +59,7 @@ class Case(Base):
         return str(self.id)
 
 
-StatusObjeto = Literal["BUFFER", "EXECUTING", "INITIAL", "FINISHED"]
+StatusObjeto = Literal["BUFFER", "RUNNING", "INITIAL", "FINISHED"]
 
 
 class Object(Base):
