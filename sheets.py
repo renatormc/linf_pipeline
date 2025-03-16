@@ -22,7 +22,7 @@ class EquipamentoData:
 
 class Planilha:
     def __init__(self) -> None:
-        xls = pd.ExcelFile('dados.xlsx')
+        xls = pd.ExcelFile('dados.ods', engine="odf")
 
         df_stat_qtd_objetos = pd.read_excel(xls, 'estatistica_qtd_objetos')
         df_stat_qtd_objetos.columns = df_stat_qtd_objetos.columns.str.strip()
@@ -65,11 +65,13 @@ class Planilha:
         return random.choices(self.values_subtipo[tipo], self.probabilidades_subtipo[tipo])[0]
 
     def extrair_etapa(self, row: pd.Series) -> EtapaData:
+        x = row['Tempo mínimo']
         return EtapaData(
             row['Objeto'],
             row['Subtipo'],
             row['Etapa'],
-            pd.to_timedelta(row['Tempo mínimo'])
+            # pd.to_timedelta(row['Tempo mínimo'])
+            timedelta(hours=x.hour, minutes=x.minute, seconds=x.second, microseconds=x.microsecond)
         )
 
     def get_equipamentos(self) -> list[EquipamentoData]:
