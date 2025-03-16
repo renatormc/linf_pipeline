@@ -65,13 +65,17 @@ class Planilha:
         return random.choices(self.values_subtipo[tipo], self.probabilidades_subtipo[tipo])[0]
 
     def extrair_etapa(self, row: pd.Series) -> EtapaData:
-        x = row['Tempo mínimo']
+        try:
+            x = row['Tempo mínimo']
+            tempo_minimo = timedelta(hours=x.hour, minutes=x.minute, seconds=x.second, microseconds=x.microsecond)
+        except:
+            tempo_minimo = pd.to_timedelta(row['Tempo mínimo'])
+        
         return EtapaData(
             row['Objeto'],
             row['Subtipo'],
             row['Etapa'],
-            # pd.to_timedelta(row['Tempo mínimo'])
-            timedelta(hours=x.hour, minutes=x.minute, seconds=x.second, microseconds=x.microsecond)
+            tempo_minimo
         )
 
     def get_equipamentos(self) -> list[EquipamentoData]:
