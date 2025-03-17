@@ -1,12 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Literal, Optional
-from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship, Session
+from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
 from sqlalchemy.types import TypeDecorator, Float
-from sqlalchemy.ext.hybrid import hybrid_property
 import sqlalchemy as sa
-from sqlalchemy import event
-import config
-from sqlalchemy_utils import observes
 
 
 # engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
@@ -112,19 +108,4 @@ class Step(Base):
 
 Base.metadata.create_all(engine)
 
-# def after_update_step(mapper, connection, target: 'Step') -> None:
-#     session = Session(bind=connection)
-#     target.equipment.executing = session.query(Step).where(
-#         Step.equipment_id == target.equipment_id,
-#         Step.start != None,
-#         Step.end == None
-#     ).count()
-#     target.equipment.waiting = session.query(Step).where(
-#         Step.equipment_id == target.equipment_id,
-#         Step.start == None
-#     ).count()
-#     session.add(target.equipment)
-#     session.commit()
 
-
-# event.listen(Step, 'after_update', after_update_step)

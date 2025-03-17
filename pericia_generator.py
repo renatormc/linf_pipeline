@@ -1,5 +1,7 @@
+from manage import backup_db
 from models import Step, Object, Case, Worker,  Equipment,  db_session
 from sheets import Planilha
+
 
 
 def populate_db_cases(numero: int) -> None:
@@ -26,7 +28,7 @@ def populate_db_cases(numero: int) -> None:
         equipamento.order = i
         equipamento.name = eq.nome  
         equipamento.lenght = eq.quantidade
-        equipamento.capacity = eq.capacidade
+        equipamento.capacity = eq.buffer + eq.quantidade
         eqmap[eq.nome] = equipamento
         db_session.add(equipamento)
     db_session.commit()
@@ -56,3 +58,6 @@ def populate_db_cases(numero: int) -> None:
             pericia.objects.append(objeto)
         db_session.add(pericia)
     db_session.commit()
+
+    backup_db()
+
