@@ -88,17 +88,37 @@ def update_pipeline(time: datetime) -> None:
     # print(f"Objects finished: {count_finished_objects()}")
 
 
-def simular_atual() -> None:
-    pass
+start_of_day = datetime.strptime("08:00", "%H:%M").time()
+start_of_lunch = datetime.strptime("12:00", "%H:%M").time()
+end_of_lunch = datetime.strptime("13:00", "%H:%M").time()
+end_of_day = datetime.strptime("17:00", "%H:%M").time()
 
 
-def simular_pipeline() -> None:
+def is_working_time(time: datetime) -> bool:
+    t = time.time()
+    if t >= start_of_day and t < start_of_lunch:
+        return True
+    if t >= end_of_lunch and t < end_of_day:
+        return True
+    return False
+
+
+def update_atual(time: datetime) -> None:
+    finish_objects_at_end_step()
+    if not is_working_time(time):
+        return
+
+
+def simulate_lab(pipeline=True) -> None:
     inicio = datetime(2024, 1, 1, 0, 0, 0)
     fim = datetime(2024, 1, 31, 23, 59, 59)
     iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
     with tqdm(total=iter.steps) as pbar:
         for i, time in enumerate(iter):
             pbar.update(1)
-            update_pipeline(time)
+            if pipeline:
+                update_pipeline(time)
+            else:
+                update_atual(time)
     print(f"Cases finished: {count_finished_cases()}")
     print(f"Objects finished: {count_finished_objects()}")

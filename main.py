@@ -1,5 +1,4 @@
 import click
-
 from manage import create_postgres_db
 
 
@@ -18,9 +17,9 @@ def gen_cases() -> None:
 @cli.command("simulate")
 def simulate() -> None:
     from pericia_generator import populate_db_cases
-    from simulation import simular_pipeline
+    from simulation import simulate_lab
     populate_db_cases(3000)
-    simular_pipeline()
+    simulate_lab()
     
     
 @cli.command("backup")

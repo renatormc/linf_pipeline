@@ -3,6 +3,9 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+if os.name == "nt":
+    os.environ['PATH'] = f"{os.environ['PATH']};{os.getenv('POSTGRES_BIN')}"
+
 APPDIR = Path(os.path.dirname(os.path.realpath(__file__)))
 
 LOCAL_FOLDER = APPDIR / '.local'
