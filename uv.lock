@@ -65,6 +65,52 @@ wheels = [
 ]
 
 [[package]]
+name = "fdb"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "future" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c6/21/928abedc1d35e568f8542aec86d79b32bdb9e3e206e4310cab37deabe19e/fdb-2.0.2.tar.gz", hash = "sha256:c10c54028308dcd3d5f5f3afe8a4039cbbef22dcd3b041c30b643cf2f0d33120", size = 897682 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/03/14a54570b43441c31cdb61c7c1dd92ee466588b130f5c89fb85f1adc757c/fdb-2.0.2-py2.py3-none-any.whl", hash = "sha256:ea54815c33760540ce0619d7ef3e0b33953000683d07ea611809d799153995f2", size = 160434 },
+]
+
+[[package]]
+name = "firebird-base"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c4/76/c8b3f19c3594a33752421ca3890ae35170db7ed7770e7e5880ff8c4d7a72/firebird_base-1.8.0.tar.gz", hash = "sha256:3b85952c07d8cce558b7579d08091ef46f7020301f58aa94c1c7f4b516a673c1", size = 49574 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d4/69/6d99d9600c0d8f5242664b34a820e10fe9cb7e7f2c3c8ca6fbc6570a8ed8/firebird_base-1.8.0-py3-none-any.whl", hash = "sha256:1358fea4626b3ba78230eb5655e085399251ee1c281289a912c528246eeeab0b", size = 62084 },
+]
+
+[[package]]
+name = "firebird-driver"
+version = "1.10.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "firebird-base" },
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/85/e7/74c149a8badef6fb5d92c55821e4a2dfeb40b1d4135af31c1472443da9f7/firebird_driver-1.10.9.tar.gz", hash = "sha256:96f0a47ecb4969db43d178d21c7320e952eeb2282bf10405034979439039ab15", size = 100906 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/65/2e0a956d45fc65e9f8fc030af26f4ebb92c5e8082db332d86b903a0eade1/firebird_driver-1.10.9-py3-none-any.whl", hash = "sha256:20d3602ce63c45ca35cb97d4c73f5a30eba4e899cd50d72808b77ebaf46fcb9e", size = 105613 },
+]
+
+[[package]]
+name = "future"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/b2/4140c69c6a66432916b26158687e821ba631a4c9273c474343badf84d3ba/future-1.0.0.tar.gz", hash = "sha256:bd2968309307861edae1458a4f8a4f3598c03be43b97521076aebf5d94c07b05", size = 1228490 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/71/ae30dadffc90b9006d77af76b393cb9dfbfc9629f339fc1574a1c52e6806/future-1.0.0-py3-none-any.whl", hash = "sha256:929292d34f5872e70396626ef385ec22355a1fae8ad29e1a734c3e43f9fbc216", size = 491326 },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -107,12 +153,14 @@ source = { virtual = "." }
 dependencies = [
     { name = "blessed" },
     { name = "click" },
+    { name = "fdb" },
     { name = "odfpy" },
     { name = "openpyxl" },
     { name = "pandas" },
     { name = "psycopg2" },
     { name = "python-calamine" },
     { name = "sqlalchemy", extra = ["mypy"] },
+    { name = "sqlalchemy-firebird" },
     { name = "sqlalchemy-utils" },
     { name = "tqdm" },
 ]
@@ -129,12 +177,14 @@ dev = [
 requires-dist = [
     { name = "blessed", specifier = ">=1.20.0" },
     { name = "click", specifier = ">=8.1.8" },
+    { name = "fdb", specifier = ">=2.0.2" },
     { name = "odfpy", specifier = ">=1.4.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "psycopg2", specifier = ">=2.9.10" },
     { name = "python-calamine", specifier = ">=0.3.1" },
     { name = "sqlalchemy", extras = ["mypy"], specifier = ">=2.0.38" },
+    { name = "sqlalchemy-firebird", specifier = ">=2.1" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
@@ -274,6 +324,20 @@ wheels = [
 ]
 
 [[package]]
+name = "protobuf"
+version = "6.30.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/de/8216061897a67b2ffe302fd51aaa76bbf613001f01cd96e2416a4955dd2b/protobuf-6.30.1.tar.gz", hash = "sha256:535fb4e44d0236893d5cf1263a0f706f1160b689a7ab962e9da8a9ce4050b780", size = 429304 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/f6/28460c49a8a93229e2264cd35fd147153fb524cbd944789db6b6f3cc9b13/protobuf-6.30.1-cp310-abi3-win32.whl", hash = "sha256:ba0706f948d0195f5cac504da156d88174e03218d9364ab40d903788c1903d7e", size = 419150 },
+    { url = "https://files.pythonhosted.org/packages/96/82/7045f5b3f3e338a8ab5852d22ce9c31e0a40d8b0f150a3735dc494be769a/protobuf-6.30.1-cp310-abi3-win_amd64.whl", hash = "sha256:ed484f9ddd47f0f1bf0648806cccdb4fe2fb6b19820f9b79a5adf5dcfd1b8c5f", size = 431007 },
+    { url = "https://files.pythonhosted.org/packages/b0/b6/732d04d0cdf457d05b7cba83ae73735d91ceced2439735b4500e311c44a5/protobuf-6.30.1-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:aa4f7dfaed0d840b03d08d14bfdb41348feaee06a828a8c455698234135b4075", size = 417579 },
+    { url = "https://files.pythonhosted.org/packages/fc/22/29dd085f6e828ab0424e73f1bae9dbb9e8bb4087cba5a9e6f21dc614694e/protobuf-6.30.1-cp39-abi3-manylinux2014_aarch64.whl", hash = "sha256:47cd320b7db63e8c9ac35f5596ea1c1e61491d8a8eb6d8b45edc44760b53a4f6", size = 317319 },
+    { url = "https://files.pythonhosted.org/packages/26/10/8863ba4baa4660e3f50ad9ae974c47fb63fa6d4089b15f7db82164b1c879/protobuf-6.30.1-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:e3083660225fa94748ac2e407f09a899e6a28bf9c0e70c75def8d15706bf85fc", size = 316213 },
+    { url = "https://files.pythonhosted.org/packages/a1/d6/683a3d470398e45b4ad9b6c95b7cbabc32f9a8daf454754f0e3df1edffa6/protobuf-6.30.1-py3-none-any.whl", hash = "sha256:3c25e51e1359f1f5fa3b298faa6016e650d148f214db2e47671131b9063c53be", size = 167064 },
+]
+
+[[package]]
 name = "psycopg2"
 version = "2.9.10"
 source = { registry = "https://pypi.org/simple" }
@@ -360,6 +424,20 @@ wheels = [
 [package.optional-dependencies]
 mypy = [
     { name = "mypy" },
+]
+
+[[package]]
+name = "sqlalchemy-firebird"
+version = "2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "firebird-driver" },
+    { name = "packaging" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/6d/0f5d5ec6d7e4516f37df01ba01b5b7c46db250ec5a700b9847359c765624/sqlalchemy-firebird-2.1.tar.gz", hash = "sha256:ddb50ab02bbd6c7140947930dd0d4df07520b608881dee8ad022bc994cc8a95d", size = 54291 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/e4/0e738f19fa5040b890f2fef7d43c15e169042c1991e31ba7a0a9569a740d/sqlalchemy_firebird-2.1-py3-none-any.whl", hash = "sha256:cd2010ac3c0f2bd425d4d68f259dc4e17c5fa5b32539a7e95196865d95e54317", size = 39785 },
 ]
 
 [[package]]

@@ -3,10 +3,11 @@ from typing import Literal, Optional
 from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
 from sqlalchemy.types import TypeDecorator, Float
 import sqlalchemy as sa
-
+import config
 
 # engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
-engine = sa.create_engine("postgresql://pipeline:pipeline@localhost/pipeline")
+# engine = sa.create_engine("postgresql://pipeline:pipeline@localhost/pipeline")
+engine = sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
 # engine = sa.create_engine("sqlite://")
 
 SessionMaker = sessionmaker(autocommit=False,

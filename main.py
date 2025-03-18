@@ -1,5 +1,7 @@
 import click
 
+from manage import create_firebird_db
+
 
 @click.group()
 @click.pass_context
@@ -30,6 +32,10 @@ def backup() -> None:
 def restore() -> None:
     from manage import restore_db
     restore_db()
+    
+@cli.command("createdb")
+def createdb() -> None:
+    create_firebird_db()
 
 
 if __name__ == '__main__':
