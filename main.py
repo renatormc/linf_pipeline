@@ -1,6 +1,6 @@
 import click
 
-from manage import create_firebird_db
+from manage import create_postgres_db
 
 
 @click.group()
@@ -35,7 +35,8 @@ def restore() -> None:
     
 @cli.command("createdb")
 def createdb() -> None:
-    create_firebird_db()
+    # create_firebird_db()
+    create_postgres_db()
 
 
 if __name__ == '__main__':
