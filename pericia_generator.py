@@ -59,5 +59,5 @@ def populate_db_cases(numero: int) -> None:
         db_session.add(pericia)
     db_session.commit()
 
-    backup_db()
+    # backup_db()
 
