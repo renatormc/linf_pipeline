@@ -94,7 +94,6 @@ def simular_atual() -> None:
 
 def simular_pipeline() -> None:
     inicio = datetime(2024, 1, 1, 0, 0, 0)
-    # fim = datetime(2024, 12, 31, 23, 59, 59)
     fim = datetime(2024, 1, 31, 23, 59, 59)
     iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
     with tqdm(total=iter.steps) as pbar:
