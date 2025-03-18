@@ -83,6 +83,9 @@ def update_pipeline(time: datetime) -> None:
         for object in objects:
             move_next_step(object, time)
         start_executing(equipment, time)
+    # print(f"Time: {time}")
+    # print(f"Cases finished: {count_finished_cases()}")
+    # print(f"Objects finished: {count_finished_objects()}")
 
 
 def simular_atual() -> None:

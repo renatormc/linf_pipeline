@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
-import logging
+from blessed import Terminal
 
-inicio = datetime(2024, 1, 1, 0, 0, 0)
-fim = datetime(2024, 12, 31, 23, 59, 59)
-delta = timedelta(minutes=5)
+term = Terminal()
 
-res = (fim - inicio)/delta
-logging.info(res)
+with term.location(0, 5):  # Move to row 5, column 10
+    print("Hello at (10, 5)")
+
+with term.location(20, 10):  # Move to row 10, column 20
+    print("Another message at (20, 10)")
