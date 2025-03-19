@@ -65,7 +65,7 @@ class Object(Base):
     type: Mapped[str] = mapped_column(sa.String(100))
     subtype: Mapped[str] = mapped_column(sa.String(100))
     status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="INITIAL")
-    current_step: Mapped[str | None] = mapped_column(sa.String(100))
+    current_location: Mapped[str | None] = mapped_column(sa.String(100))
     next_step: Mapped[str | None] = mapped_column(sa.String(100))
     duration_current_step: Mapped[timedelta | None] = mapped_column(sa.Interval)
     start_current_step_executing: Mapped[datetime | None] = mapped_column(sa.DateTime)

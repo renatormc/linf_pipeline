@@ -15,7 +15,7 @@ def get_object_step(object: Object, name: str) -> Step:
 
 def count_objects_on_buffer(equipment: Equipment) -> int:
     query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
+        Object.current_location == equipment.name,
         Object.status == "BUFFER"
     )
     return query.count()
@@ -23,7 +23,7 @@ def count_objects_on_buffer(equipment: Equipment) -> int:
 
 def count_objects_executing(equipment: Equipment) -> int:
     query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
+        Object.current_location == equipment.name,
         Object.status == "RUNNING"
     )
     return query.count()
@@ -31,20 +31,24 @@ def count_objects_executing(equipment: Equipment) -> int:
 
 def count_total_objects(equipment: Equipment) -> int:
     query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
+        Object.current_location == equipment.name,
     )
+    
     return query.count()
 
 
 def number_of_vacancies(equipment: Equipment) -> int:
     return equipment.capacity - count_total_objects(equipment)
 
+# def number_of_free_instances(equipment: Equipment) -> int:
+    
+
 
 def move_next_step(object: Object, commit=True) -> None:
     if not object.next_step:
         raise Exception("there is not next step")
     next_step = get_object_step(object, object.next_step)
-    object.current_step = next_step.name
+    object.current_location = next_step.name
     object.status = "BUFFER"
     object.duration_current_step = next_step.duration
     object.next_step = next_step.next_step
@@ -65,9 +69,17 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int) -> I
     return query.all()
 
 
+def get_waiting_equipment_on_workers_desk(equipment: Equipment, time: datetime, limit: int) -> Iterable[Object]:
+    query = db_session.query(Object).where(
+        Object.status == "WORKER_DESK",
+        Object.next_step == equipment.name
+    ).order_by(Object.case_id).limit(limit)
+    return query.all()
+
+
 def get_finished_executing(equipment: Equipment, time: datetime) -> list[Object]:
     query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
+        Object.current_location == equipment.name,
         Object.status == "RUNNING",
         Object.start_current_step_executing + Object.duration_current_step <= time
     ).order_by(Object.case_id)
@@ -85,3 +97,10 @@ def count_finished_objects() -> int:
         Object.status == "FINISHED"
     )
     return query.count()
+
+def get_next_case() -> Case | None:
+    query = db_session.query(Case).where(
+        ~Case.objects.any(Object.status != "INITIAL"),
+        Case.worker_id == None
+    ).order_by(Case.id)
+    return query.first()

@@ -7,7 +7,7 @@ from models import Case, Equipment, Object, Step, db_session
 from models import Worker
 import time
 
-from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_waiting_equipment, move_next_step, number_of_vacancies
+from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_next_case, get_waiting_equipment, move_next_step, number_of_vacancies
 
 
 class IntervalIterator:
@@ -43,7 +43,7 @@ def get_perito_disponivel() -> Worker | None:
     return query.first()
 
 
-def finish_objects_at_end_step(time: datetime, commit=True) -> None:
+def finish_objects_at_end_step(time: datetime, remove_from_equipment=False, commit=True) -> None:
     query = db_session.query(Object).where(
         Object.next_step == None,
         Object.status == "RUNNING",
@@ -51,9 +51,11 @@ def finish_objects_at_end_step(time: datetime, commit=True) -> None:
     )
     for object in query.all():
         logging.info(f"Finishing object {object.id}")
-        object.current_step = None
+        object.current_location = None
         object.status = "FINISHED"
         object.start_current_step_executing = None
+        if remove_from_equipment:
+            object.current_location = "WORKER_DESK"
         db_session.add(object)
     if commit:
         db_session.commit()
@@ -62,7 +64,7 @@ def finish_objects_at_end_step(time: datetime, commit=True) -> None:
 def start_executing(equipment: Equipment, time: datetime) -> None:
     n = equipment.capacity - count_objects_executing(equipment)
     query = db_session.query(Object).where(
-        Object.current_step == equipment.name,
+        Object.current_location == equipment.name,
         Object.status == "BUFFER"
     ).order_by(Object.case_id).limit(n)
     for object in query.all():
@@ -95,6 +97,8 @@ end_of_day = datetime.strptime("17:00", "%H:%M").time()
 
 
 def is_working_time(time: datetime) -> bool:
+    if time.weekday() in [5,6]:
+        return False
     t = time.time()
     if t >= start_of_day and t < start_of_lunch:
         return True
@@ -103,10 +107,23 @@ def is_working_time(time: datetime) -> bool:
     return False
 
 
+
 def update_atual(time: datetime) -> None:
-    finish_objects_at_end_step()
+    finish_objects_at_end_step(time, remove_from_equipment=True)
     if not is_working_time(time):
         return
+    #Get works that is free
+    query = db_session.query(Worker).where(
+        ~Worker.cases.any(Case.objects.any(Object.status != "FINISHED"))
+    )
+    for worker in query.all():
+        c = get_next_case()
+        if c:
+            c.worker = worker
+            for obj in c.objects:
+                obj.current_location = "WORKER_DESK"
+            db_session.add(c)
+            db_session.commit()
 
 
 def simulate_lab(pipeline=True) -> None:
