@@ -69,7 +69,7 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int) -> I
     return query.all()
 
 
-def get_waiting_equipment_on_workers_desk(equipment: Equipment, time: datetime, limit: int) -> Iterable[Object]:
+def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int) -> Iterable[Object]:
     query = db_session.query(Object).where(
         Object.status == "WORKER_DESK",
         Object.next_step == equipment.name

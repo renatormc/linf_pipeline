@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from sqlalchemy import and_
-from typing import Iterator
+from typing import Iterator, Literal
 import logging
 from tqdm import tqdm
 from models import Case, Equipment, Object, Step, db_session
 from models import Worker
 import time
 
-from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_next_case, get_waiting_equipment, move_next_step, number_of_vacancies
+from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk, move_next_step, number_of_vacancies
 
 
 class IntervalIterator:
@@ -108,11 +108,11 @@ def is_working_time(time: datetime) -> bool:
 
 
 
-def update_atual(time: datetime) -> None:
+def update_current(time: datetime) -> None:
     finish_objects_at_end_step(time, remove_from_equipment=True)
     if not is_working_time(time):
         return
-    #Get works that is free
+    #Get free workers
     query = db_session.query(Worker).where(
         ~Worker.cases.any(Case.objects.any(Object.status != "FINISHED"))
     )
@@ -124,18 +124,32 @@ def update_atual(time: datetime) -> None:
                 obj.current_location = "WORKER_DESK"
             db_session.add(c)
             db_session.commit()
+            
+    query2 = db_session.query(Equipment).order_by(Equipment.order)
+    for equipment in query2.all():
+        logging.info(f"Analysing equipment {equipment}")
+        n = equipment.lenght - count_objects_executing(equipment)
+        objs = get_waiting_equipment_on_workers_desk(equipment, n)
+        for obj in objs:
+            obj.current_location = equipment.name
+            step = get_object_step(obj, obj.current_location)
+            obj.next_step = step.next_step
+            obj.status = "RUNNING"
+            obj.start_current_step_executing = time
+            db_session.add(obj)
+    db_session.commit()
 
 
-def simulate_lab(pipeline=True) -> None:
+def simulate_lab(type: Literal['pipeline', 'current']) -> None:
     inicio = datetime(2024, 1, 1, 0, 0, 0)
     fim = datetime(2024, 1, 31, 23, 59, 59)
     iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
     with tqdm(total=iter.steps) as pbar:
         for i, time in enumerate(iter):
             pbar.update(1)
-            if pipeline:
+            if type == 'pipeline':
                 update_pipeline(time)
             else:
-                update_atual(time)
+                update_current(time)
     print(f"Cases finished: {count_finished_cases()}")
     print(f"Objects finished: {count_finished_objects()}")

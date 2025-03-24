@@ -1,3 +1,4 @@
+from typing import Literal
 import click
 from manage import create_postgres_db
 
@@ -9,17 +10,26 @@ def cli(ctx: click.Context) -> None:
 
 
 @cli.command("gen-cases")
-def gen_cases() -> None:
+@click.argument("number", type=int)
+def gen_cases(number: int) -> None:
     from pericia_generator import populate_db_cases
-    populate_db_cases(500)
+    from manage import backup_db
+    print("Creating database")
+    create_postgres_db()
+    print("Populating database")
+    populate_db_cases(number)
+    print("backup database")
+    backup_db()
 
 
 @cli.command("simulate")
-def simulate() -> None:
+@click.argument('type', type=click.Choice(['pipeline', 'current']))
+def simulate(type: Literal['pipeline', 'current']) -> None:
     from pericia_generator import populate_db_cases
     from simulation import simulate_lab
-    populate_db_cases(3000)
-    simulate_lab()
+    from manage import restore_db
+    restore_db()
+    simulate_lab(type)
     
     
 @cli.command("backup")
