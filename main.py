@@ -2,7 +2,6 @@ from typing import Literal
 import click
 from manage import create_postgres_db
 
-
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context) -> None:
@@ -46,6 +45,18 @@ def restore() -> None:
 def createdb() -> None:
     # create_firebird_db()
     create_postgres_db()
+    
+@cli.command("gui")
+def gui() -> None:
+    from PySide6.QtWidgets import QApplication
+    import signal
+    import sys
+    app = QApplication(sys.argv)
+    from gui.main_window import MainWindow
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == '__main__':
