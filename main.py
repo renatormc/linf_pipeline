@@ -13,8 +13,6 @@ def cli(ctx: click.Context) -> None:
 def gen_cases(number: int) -> None:
     from pericia_generator import populate_db_cases
     from manage import backup_db
-    print("Creating database")
-    create_postgres_db()
     print("Populating database")
     populate_db_cases(number)
     print("backup database")

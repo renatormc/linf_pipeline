@@ -3,10 +3,10 @@ from sqlalchemy import and_
 from typing import Iterator, Literal
 import logging
 from tqdm import tqdm
-from models import Case, Equipment, Object, Step, db_session
+from models import Case, Equipment, Object, Step
 from models import Worker
 import time
-
+from sqlalchemy.orm import Session
 from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk, move_next_step, number_of_vacancies
 
 
@@ -32,7 +32,7 @@ class IntervalIterator:
         return result
 
 
-def get_perito_disponivel() -> Worker | None:
+def get_perito_disponivel(db_session: Session) -> Worker | None:
     query = db_session.query(Worker).where(
         Worker.cases.any(and_(
             Case.start != None,
@@ -43,7 +43,7 @@ def get_perito_disponivel() -> Worker | None:
     return query.first()
 
 
-def finish_objects_at_end_step(time: datetime, remove_from_equipment=False, commit=True) -> None:
+def finish_objects_at_end_step(time: datetime,db_session: Session, remove_from_equipment=False, commit=True) -> None:
     query = db_session.query(Object).where(
         Object.next_step == None,
         Object.status == "RUNNING",
@@ -61,7 +61,7 @@ def finish_objects_at_end_step(time: datetime, remove_from_equipment=False, comm
         db_session.commit()
 
 
-def start_executing(equipment: Equipment, time: datetime) -> None:
+def start_executing(equipment: Equipment, time: datetime, db_session: Session) -> None:
     n = equipment.capacity - count_objects_executing(equipment)
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
@@ -75,7 +75,7 @@ def start_executing(equipment: Equipment, time: datetime) -> None:
     db_session.commit()
 
 
-def update_pipeline(time: datetime) -> None:
+def update_pipeline(time: datetime, db_session: Session) -> None:
     finish_objects_at_end_step(time)
     query = db_session.query(Equipment).order_by(Equipment.order.desc())
     for equipment in query.all():
@@ -108,7 +108,7 @@ def is_working_time(time: datetime) -> bool:
 
 
 
-def update_current(time: datetime) -> None:
+def update_current(time: datetime, db_session: Session) -> None:
     finish_objects_at_end_step(time, remove_from_equipment=True)
     if not is_working_time(time):
         return

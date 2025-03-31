@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Literal, Optional
-from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship
+from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship, Session
 from sqlalchemy.types import TypeDecorator, Float
 import sqlalchemy as sa
 import config
@@ -10,10 +10,13 @@ engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@l
 # engine = sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
 # engine = sa.create_engine("sqlite://")
 
-SessionMaker = sessionmaker(autocommit=False,
-                            autoflush=False,
-                            bind=engine)
-db_session = scoped_session(SessionMaker)
+# SessionMaker = sessionmaker(autocommit=False,
+#                             autoflush=False,
+#                             bind=engine)
+# db_session = scoped_session(SessionMaker)
+
+def DBSession() -> Session:
+    return Session(engine)
 
 
 class Base(DeclarativeBase):
@@ -105,7 +108,6 @@ class Step(Base):
 
     def __repr__(self):
         return str(self.id)
-
 
 Base.metadata.create_all(engine)
 
