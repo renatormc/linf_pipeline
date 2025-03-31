@@ -3,11 +3,13 @@ from sqlalchemy import and_
 from typing import Iterator, Literal
 import logging
 from tqdm import tqdm
-from models import Case, Equipment, Object, Step
+from models import Case, DBSession, Equipment, Object
 from models import Worker
 import time
 from sqlalchemy.orm import Session
-from repo import count_finished_cases, count_finished_objects, count_objects_executing, get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk, move_next_step, number_of_vacancies
+from repo import count_finished_cases, count_finished_objects, count_objects_executing, \
+    get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk,\
+        move_next_step, number_of_vacancies
 
 
 class IntervalIterator:
@@ -62,7 +64,7 @@ def finish_objects_at_end_step(time: datetime,db_session: Session, remove_from_e
 
 
 def start_executing(equipment: Equipment, time: datetime, db_session: Session) -> None:
-    n = equipment.capacity - count_objects_executing(equipment)
+    n = equipment.capacity - count_objects_executing(equipment, db_session)
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
         Object.status == "BUFFER"
@@ -76,18 +78,15 @@ def start_executing(equipment: Equipment, time: datetime, db_session: Session) -
 
 
 def update_pipeline(time: datetime, db_session: Session) -> None:
-    finish_objects_at_end_step(time)
+    finish_objects_at_end_step(time, db_session)
     query = db_session.query(Equipment).order_by(Equipment.order.desc())
     for equipment in query.all():
         logging.info(f"Analysing equipment {equipment}")
-        n = number_of_vacancies(equipment)
-        objects = get_waiting_equipment(equipment, time, n)
+        n = number_of_vacancies(equipment, db_session)
+        objects = get_waiting_equipment(equipment, time, n, db_session)
         for object in objects:
-            move_next_step(object, time)
-        start_executing(equipment, time)
-    # print(f"Time: {time}")
-    # print(f"Cases finished: {count_finished_cases()}")
-    # print(f"Objects finished: {count_finished_objects()}")
+            move_next_step(object, db_session)
+        start_executing(equipment, time, db_session)
 
 
 start_of_day = datetime.strptime("08:00", "%H:%M").time()
@@ -109,7 +108,7 @@ def is_working_time(time: datetime) -> bool:
 
 
 def update_current(time: datetime, db_session: Session) -> None:
-    finish_objects_at_end_step(time, remove_from_equipment=True)
+    finish_objects_at_end_step(time, db_session, remove_from_equipment=True)
     if not is_working_time(time):
         return
     #Get free workers
@@ -117,7 +116,7 @@ def update_current(time: datetime, db_session: Session) -> None:
         ~Worker.cases.any(Case.objects.any(Object.status != "FINISHED"))
     )
     for worker in query.all():
-        c = get_next_case()
+        c = get_next_case(db_session)
         if c:
             c.worker = worker
             for obj in c.objects:
@@ -128,11 +127,11 @@ def update_current(time: datetime, db_session: Session) -> None:
     query2 = db_session.query(Equipment).order_by(Equipment.order)
     for equipment in query2.all():
         logging.info(f"Analysing equipment {equipment}")
-        n = equipment.lenght - count_objects_executing(equipment)
-        objs = get_waiting_equipment_on_workers_desk(equipment, n)
+        n = equipment.lenght - count_objects_executing(equipment, db_session)
+        objs = get_waiting_equipment_on_workers_desk(equipment, n, db_session)
         for obj in objs:
             obj.current_location = equipment.name
-            step = get_object_step(obj, obj.current_location)
+            step = get_object_step(obj, obj.current_location, db_session)
             obj.next_step = step.next_step
             obj.status = "RUNNING"
             obj.start_current_step_executing = time
@@ -141,15 +140,16 @@ def update_current(time: datetime, db_session: Session) -> None:
 
 
 def simulate_lab(type: Literal['pipeline', 'current']) -> None:
-    inicio = datetime(2024, 1, 1, 0, 0, 0)
-    fim = datetime(2024, 1, 31, 23, 59, 59)
-    iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
-    with tqdm(total=iter.steps) as pbar:
-        for i, time in enumerate(iter):
-            pbar.update(1)
-            if type == 'pipeline':
-                update_pipeline(time)
-            else:
-                update_current(time)
-    print(f"Cases finished: {count_finished_cases()}")
-    print(f"Objects finished: {count_finished_objects()}")
+    with DBSession() as db_session:
+        inicio = datetime(2024, 1, 1, 0, 0, 0)
+        fim = datetime(2024, 1, 31, 23, 59, 59)
+        iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
+        with tqdm(total=iter.steps) as pbar:
+            for i, time in enumerate(iter):
+                pbar.update(1)
+                if type == 'pipeline':
+                    update_pipeline(time, db_session)
+                else:
+                    update_current(time, db_session)
+        print(f"Cases finished: {count_finished_cases(db_session)}")
+        print(f"Objects finished: {count_finished_objects(db_session)}")

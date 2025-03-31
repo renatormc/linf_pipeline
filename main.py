@@ -7,22 +7,9 @@ from manage import create_postgres_db
 def cli(ctx: click.Context) -> None:
     ctx.ensure_object(dict)
 
-
-@cli.command("gen-cases")
-@click.argument("number", type=int)
-def gen_cases(number: int) -> None:
-    from pericia_generator import populate_db_cases
-    from manage import backup_db
-    print("Populating database")
-    populate_db_cases(number)
-    print("backup database")
-    backup_db()
-
-
 @cli.command("simulate")
 @click.argument('type', type=click.Choice(['pipeline', 'current']))
 def simulate(type: Literal['pipeline', 'current']) -> None:
-    from pericia_generator import populate_db_cases
     from simulation import simulate_lab
     from manage import restore_db
     restore_db()
@@ -40,9 +27,16 @@ def restore() -> None:
     restore_db()
     
 @cli.command("createdb")
-def createdb() -> None:
-    # create_firebird_db()
+@click.argument("number", type=int)
+def createdb(number: int) -> None:
+    from pericia_generator import populate_db_cases
+    from manage import backup_db
     create_postgres_db()
+    print("Populating database")
+    populate_db_cases(number)
+    print("backup database")
+    backup_db()
+    
     
 @cli.command("gui")
 def gui() -> None:

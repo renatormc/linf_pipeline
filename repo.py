@@ -39,7 +39,7 @@ def count_total_objects(equipment: Equipment, db_session: Session) -> int:
 
 
 def number_of_vacancies(equipment: Equipment, db_session: Session) -> int:
-    return equipment.capacity - count_total_objects(equipment)
+    return equipment.capacity - count_total_objects(equipment, db_session)
 
 # def number_of_free_instances(equipment: Equipment) -> int:
     
@@ -48,7 +48,7 @@ def number_of_vacancies(equipment: Equipment, db_session: Session) -> int:
 def move_next_step(object: Object,db_session: Session, commit=True) -> None:
     if not object.next_step:
         raise Exception("there is not next step")
-    next_step = get_object_step(object, object.next_step)
+    next_step = get_object_step(object, object.next_step, db_session)
     object.current_location = next_step.name
     object.status = "BUFFER"
     object.duration_current_step = next_step.duration
@@ -114,4 +114,12 @@ def clear_db(db_session: Session) -> None:
 
     for per in db_session.query(Worker).all():
         db_session.delete(per)
+    db_session.commit()
+    
+    # for step in db_session.query(Step).all():
+    #     db_session.delete(step)
+    # db_session.commit()
+    
+    for case_ in db_session.query(Case).all():
+        db_session.delete(case_)
     db_session.commit()

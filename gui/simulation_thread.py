@@ -10,7 +10,6 @@ from simulation import IntervalIterator, update_current, update_pipeline
 class ProgressData:
     value: int
     time: datetime
-    db_session: Session
 
 class SimulationThread(QThread):
     progress = Signal(ProgressData) 
@@ -27,7 +26,7 @@ class SimulationThread(QThread):
             iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
             for i, time in enumerate(iter):
                 if self.type == 'pipeline':
-                    update_pipeline(time)
+                    update_pipeline(time, db_session)
                 else:
-                    update_current(time)
-                self.progress.emit(ProgressData(i + 1, time, db_session))
+                    update_current(time, db_session)
+                self.progress.emit(ProgressData(i + 1, time))

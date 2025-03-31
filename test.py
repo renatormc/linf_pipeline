@@ -1,4 +1,33 @@
-from datetime import datetime
+from blessed import Terminal
+import time
 
-t  =datetime(2025,3,23).date()
-print(t.weekday())
+def draw_screen(term, objects, cases, progress):
+    with term.location(0, 0):  # Reset cursor position
+        print(term.clear)  # Clear the screen
+        print(term.bold("Console UI Example"))
+        print("".ljust(30, "-"))
+        print(f"{term.bold('Number of objects:')} {objects}")
+        print(f"{term.bold('Number of cases:')} {cases}")
+        
+        # Draw progress bar
+        bar_length = 30  # Width of the progress bar
+        completed = int(bar_length * progress)
+        bar = "█" * completed + "-" * (bar_length - completed)
+        print(f"{term.bold('Progress:')} [{bar}] {int(progress * 100)}%")
+
+def main():
+    term = Terminal()
+    objects = 10
+    cases = 5
+    progress = 0.0
+    
+    with term.fullscreen(), term.hidden_cursor():  # Fullscreen mode & hide cursor
+        for i in range(11):
+            draw_screen(term, objects, cases, progress)
+            time.sleep(0.5)  # Simulate progress update
+            progress += 0.1
+    
+    print(term.move_down(2) + "Process complete!")
+
+if __name__ == "__main__":
+    main()

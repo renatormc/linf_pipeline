@@ -6,8 +6,9 @@ import sqlalchemy as sa
 import config
 
 # engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
-engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
-# engine = sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
+# engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
+def create_engine() -> sa.Engine:
+    return sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
 # engine = sa.create_engine("sqlite://")
 
 # SessionMaker = sessionmaker(autocommit=False,
@@ -16,7 +17,7 @@ engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@l
 # db_session = scoped_session(SessionMaker)
 
 def DBSession() -> Session:
-    return Session(engine)
+    return Session(create_engine())
 
 
 class Base(DeclarativeBase):
@@ -70,7 +71,7 @@ class Object(Base):
     status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="INITIAL")
     current_location: Mapped[str | None] = mapped_column(sa.String(100))
     next_step: Mapped[str | None] = mapped_column(sa.String(100))
-    duration_current_step: Mapped[timedelta | None] = mapped_column(sa.Interval)
+    duration_current_step: Mapped[int | None] = mapped_column(sa.Integer)
     start_current_step_executing: Mapped[datetime | None] = mapped_column(sa.DateTime)
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
     case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)
@@ -98,7 +99,7 @@ class Step(Base):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
     order: Mapped[int] = mapped_column(sa.Integer)
-    duration: Mapped[timedelta] = mapped_column(sa.Interval)
+    duration: Mapped[int] = mapped_column(sa.Integer)
     next_step: Mapped[str | None] = mapped_column(sa.String)
     previous_step: Mapped[str | None] = mapped_column(sa.String)
     object_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("object.id"))
@@ -109,6 +110,7 @@ class Step(Base):
     def __repr__(self):
         return str(self.id)
 
-Base.metadata.create_all(engine)
+def create_tables() -> None:
+    Base.metadata.create_all(create_engine())
 
 
