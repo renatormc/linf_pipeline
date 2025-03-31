@@ -11,8 +11,6 @@ def cli(ctx: click.Context) -> None:
 @click.argument('type', type=click.Choice(['pipeline', 'current']))
 def simulate(type: Literal['pipeline', 'current']) -> None:
     from simulation import simulate_lab
-    from manage import restore_db
-    restore_db()
     simulate_lab(type)
     
     

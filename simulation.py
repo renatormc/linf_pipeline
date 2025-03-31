@@ -7,6 +7,7 @@ from models import Case, DBSession, Equipment, Object
 from models import Worker
 import time
 from sqlalchemy.orm import Session
+from blessed import Terminal
 from repo import count_finished_cases, count_finished_objects, count_objects_executing, \
     get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk,\
         move_next_step, number_of_vacancies
@@ -140,16 +141,32 @@ def update_current(time: datetime, db_session: Session) -> None:
 
 
 def simulate_lab(type: Literal['pipeline', 'current']) -> None:
-    with DBSession() as db_session:
+    term = Terminal()
+    with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
         inicio = datetime(2024, 1, 1, 0, 0, 0)
         fim = datetime(2024, 1, 31, 23, 59, 59)
         iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
-        with tqdm(total=iter.steps) as pbar:
-            for i, time in enumerate(iter):
-                pbar.update(1)
-                if type == 'pipeline':
-                    update_pipeline(time, db_session)
-                else:
-                    update_current(time, db_session)
-        print(f"Cases finished: {count_finished_cases(db_session)}")
-        print(f"Objects finished: {count_finished_objects(db_session)}")
+        for i, time in enumerate(iter):
+            if type == 'pipeline':
+                update_pipeline(time, db_session)
+            else:
+                update_current(time, db_session)
+            draw_screen(term, time, count_finished_objects(db_session), count_finished_cases(db_session), (i+1)/iter.steps)
+       
+
+
+def draw_screen(term: Terminal, time: datetime, objects: int, cases: int, progress: float) -> None:
+
+    with term.location(0, 0):  
+        print(term.clear) 
+        print(term.bold("Pipeline simulator"))
+        print("".ljust(30, "-"))
+        print(f"{term.bold('Time:')} {time.strftime("%d/%m/%Y %H:%M:%S")}")
+        print(f"{term.bold('Number of objects:')} {objects}")
+        print(f"{term.bold('Number of cases:')} {cases}")
+        
+        # Draw progress bar
+        bar_length = 40 
+        completed = int(bar_length * progress)
+        bar = "█" * completed + "-" * (bar_length - completed)
+        print(f"{term.bold('Progress:')} [{bar}] {progress * 100:.2f}%")

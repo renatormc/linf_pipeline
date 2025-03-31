@@ -47,7 +47,7 @@ def populate_db_cases(numero: int) -> None:
                         objeto.next_step = item.etapa
                     step.object = objeto
                     step.order = i
-                    step.duration = int(item.tempo_minimo.total_seconds())
+                    step.duration = item.tempo_minimo
                     steps.append(step)
                 pericia.objects.append(objeto)
             db_session.add(pericia)
