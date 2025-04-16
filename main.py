@@ -2,6 +2,7 @@ from typing import Literal
 import click
 from manage import create_postgres_db
 
+
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context) -> None:
@@ -29,7 +30,9 @@ def restore() -> None:
 def createdb(number: int) -> None:
     from pericia_generator import populate_db_cases
     from manage import backup_db
+    from models import create_tables
     create_postgres_db()
+    create_tables()
     print("Populating database")
     populate_db_cases(number)
     print("backup database")

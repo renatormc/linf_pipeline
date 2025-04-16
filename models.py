@@ -8,7 +8,8 @@ import config
 # engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
 # engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
 def create_engine() -> sa.Engine:
-    return sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
+    # return sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
+    return sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
 # engine = sa.create_engine("sqlite://")
 
 # SessionMaker = sessionmaker(autocommit=False,
