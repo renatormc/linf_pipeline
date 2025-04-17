@@ -150,7 +150,7 @@ def simulate_lab(type: Literal['pipeline', 'current']) -> None:
                 update_pipeline(time, db_session)
             else:
                 update_current(time, db_session)
-            term.draw_screen(time, count_finished_objects(db_session), count_finished_cases(db_session), (i+1)/iter.steps, db_session)
+            term.draw_screen(time, count_finished_objects(db_session), count_finished_cases(db_session), ((i+1)/iter.steps)*100, db_session)
 
 
 def print_stats() -> None:

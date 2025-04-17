@@ -1,4 +1,5 @@
 import sys
+from typing import Literal
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, \
     QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar, QFormLayout, QLineEdit
 from PySide6.QtCore import Qt
@@ -7,8 +8,9 @@ from models import DBSession, Equipment
 from repo import count_objects_in_equipments
 from thread import PData, Worker
 
-class MyWindow(QWidget):
-    def __init__(self) -> None:
+class SimulatorWindow(QWidget):
+    def __init__(self, sim_type: Literal['pipeline', 'current']) -> None:
+        self.sim_type = sim_type
         super().__init__()
         with DBSession() as db_session:
             self.equipments = db_session.query(Equipment).all()
@@ -86,18 +88,15 @@ class MyWindow(QWidget):
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments.items():
             self.update_equipment(name, running)
+        self.led_cases_finished.setText(str(p.finished_cases))
+        self.led_obj_finished.setText(str(p.finished_objects))
         
     def start_thread(self) -> None:
-        self.worker = Worker(self.equipments)
+        self.worker = Worker(self.equipments, self.sim_type)
         self.worker.progress.connect(self.update_progress)
         self.worker.start()
 
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
 
-    window = MyWindow()
-    window.show()
-
-    sys.exit(app.exec())
+   

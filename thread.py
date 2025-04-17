@@ -1,28 +1,44 @@
 from dataclasses import dataclass
-from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QProgressBar
-)
+from datetime import datetime, timedelta
+from typing import Literal
 from PySide6.QtCore import QThread, Signal
 import time
 
 from models import DBSession, Equipment
-from repo import count_objects_in_equipments
+from repo import count_finished_cases, count_finished_objects, count_objects_in_equipments
+from simulation import IntervalIterator, update_current, update_pipeline
 
 
 @dataclass
 class PData:
     progress: int
     equipments: dict[str, int]   
+    finished_objects: int
+    finished_cases: int
 
 class Worker(QThread):
     progress = Signal(PData) 
     
-    def __init__(self, equipments: list[Equipment], *args, **kwargs):
+    def __init__(self, equipments: list[Equipment], type: Literal['pipeline', 'current'], *args, **kwargs):
         self.equipments = equipments
+        self.type = type
         super().__init__(*args, **kwargs)
 
     def run(self) -> None:
         with DBSession() as db_session:
-            for i in range(101):
-                time.sleep(0.05)
-                self.progress.emit(PData(i, {eq.name:  count_objects_in_equipments(db_session, eq.name) for eq in self.equipments}))
+            inicio = datetime(2024, 1, 1, 0, 0, 0)
+            fim = datetime(2024, 1, 31, 23, 59, 59)
+            iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
+            for i, time in enumerate(iter):
+                if self.type == 'pipeline':
+                    update_pipeline(time, db_session)
+                else:
+                    update_current(time, db_session)
+                
+                self.progress.emit(PData(
+                    equipments={eq.name: count_objects_in_equipments(db_session, eq.name) for eq in self.equipments},
+                    progress=int((i+1)/iter.steps),
+                    finished_cases=count_finished_cases(db_session),
+                    finished_objects=count_finished_objects(db_session)
+                ))
+                

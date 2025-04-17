@@ -9,11 +9,22 @@ from simulation import print_stats
 def cli(ctx: click.Context) -> None:
     ctx.ensure_object(dict)
 
+
 @cli.command("simulate")
 @click.argument('type', type=click.Choice(['pipeline', 'current']))
-def simulate(type: Literal['pipeline', 'current']) -> None:
-    from simulation import simulate_lab
-    simulate_lab(type)
+@click.option('--restore',  is_flag=True, show_default=True, default=False, help="Restore database.")
+def simulate(type: Literal['pipeline', 'current'], restore: bool) -> None:
+    if restore:
+        from manage import restore_db
+        restore_db()
+    import sys
+    from PySide6.QtWidgets import QApplication
+    from gui import SimulatorWindow
+    app = QApplication(sys.argv)
+    window = SimulatorWindow(type)
+    window.show()
+    sys.exit(app.exec())
+
     
     
 @cli.command("backup")
@@ -21,10 +32,13 @@ def backup() -> None:
     from manage import backup_db
     backup_db()
     
+    
 @cli.command("restore")
 def restore() -> None:
     from manage import restore_db
     restore_db()
+    
+   
     
 @cli.command("createdb")
 @click.argument("number", type=int)
