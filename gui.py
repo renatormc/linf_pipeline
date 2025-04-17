@@ -29,7 +29,7 @@ class SimulatorWindow(QWidget):
         self.main_layout.addWidget(QLabel("Equipamentos"))
         self.setup_twd_equipments()
         
-        self.main_layout.addWidget(QLabel("Finalziados"))
+        self.main_layout.addWidget(QLabel("Finalizados"))
         self.setup_finished()
         
         self.pgbar = QProgressBar()
@@ -93,6 +93,7 @@ class SimulatorWindow(QWidget):
         
     def start_thread(self) -> None:
         self.worker = Worker(self.equipments, self.sim_type)
+        self.pgbar.setMaximum(self.worker.iter.steps)
         self.worker.progress.connect(self.update_progress)
         self.worker.start()
 

@@ -23,13 +23,13 @@ class Worker(QThread):
         self.equipments = equipments
         self.type = type
         super().__init__(*args, **kwargs)
+        inicio = datetime(2024, 1, 1, 0, 0, 0)
+        fim = datetime(2024, 1, 31, 23, 59, 59)
+        self.iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
 
     def run(self) -> None:
         with DBSession() as db_session:
-            inicio = datetime(2024, 1, 1, 0, 0, 0)
-            fim = datetime(2024, 1, 31, 23, 59, 59)
-            iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
-            for i, time in enumerate(iter):
+            for i, time in enumerate(self.iter):
                 if self.type == 'pipeline':
                     update_pipeline(time, db_session)
                 else:
@@ -37,7 +37,7 @@ class Worker(QThread):
                 
                 self.progress.emit(PData(
                     equipments={eq.name: count_objects_in_equipments(db_session, eq.name) for eq in self.equipments},
-                    progress=int((i+1)/iter.steps),
+                    progress=i+1,
                     finished_cases=count_finished_cases(db_session),
                     finished_objects=count_finished_objects(db_session)
                 ))
