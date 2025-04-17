@@ -1,6 +1,7 @@
 from typing import Literal
 import click
 from manage import create_postgres_db
+from simulation import print_stats
 
 
 @click.group()
@@ -37,20 +38,13 @@ def createdb(number: int) -> None:
     populate_db_cases(number)
     print("backup database")
     backup_db()
-    
-    
-@cli.command("gui")
-def gui() -> None:
-    from PySide6.QtWidgets import QApplication
-    import signal
-    import sys
-    app = QApplication(sys.argv)
-    from gui.main_window import MainWindow
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
 
+
+@cli.command("stats")
+def stats() -> None:
+    print_stats()
+    
+    
 
 if __name__ == '__main__':
     cli(obj={})

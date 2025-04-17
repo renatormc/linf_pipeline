@@ -34,7 +34,7 @@ def count_total_objects(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
     )
-    
+
     return query.count()
 
 
@@ -42,10 +42,9 @@ def number_of_vacancies(equipment: Equipment, db_session: Session) -> int:
     return equipment.capacity - count_total_objects(equipment, db_session)
 
 # def number_of_free_instances(equipment: Equipment) -> int:
-    
 
 
-def move_next_step(object: Object,db_session: Session, commit=True) -> None:
+def move_next_step(object: Object, db_session: Session, commit=True) -> None:
     if not object.next_step:
         raise Exception("there is not next step")
     next_step = get_object_step(object, object.next_step, db_session)
@@ -93,11 +92,21 @@ def count_finished_cases(db_session: Session) -> int:
     )
     return query.count()
 
+
 def count_finished_objects(db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.status == "FINISHED"
     )
     return query.count()
+
+
+def count_objects_in_equipments(db_session: Session, name: str) -> int:
+    query = db_session.query(Object).where(
+        Object.current_location == name,
+        Object.status == "RUNNING"
+    )
+    return query.count()
+
 
 def get_next_case(db_session: Session) -> Case | None:
     query = db_session.query(Case).where(
@@ -115,11 +124,11 @@ def clear_db(db_session: Session) -> None:
     for per in db_session.query(Worker).all():
         db_session.delete(per)
     db_session.commit()
-    
+
     # for step in db_session.query(Step).all():
     #     db_session.delete(step)
     # db_session.commit()
-    
+
     for case_ in db_session.query(Case).all():
         db_session.delete(case_)
     db_session.commit()

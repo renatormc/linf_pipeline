@@ -7,10 +7,10 @@ from models import Case, DBSession, Equipment, Object
 from models import Worker
 import time
 from sqlalchemy.orm import Session
-from blessed import Terminal
 from repo import count_finished_cases, count_finished_objects, count_objects_executing, \
-    get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk,\
-        move_next_step, number_of_vacancies
+    get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk, \
+    move_next_step, number_of_vacancies
+from term import CustomTerminal
 
 
 class IntervalIterator:
@@ -46,7 +46,7 @@ def get_perito_disponivel(db_session: Session) -> Worker | None:
     return query.first()
 
 
-def finish_objects_at_end_step(time: datetime,db_session: Session, remove_from_equipment=False, commit=True) -> None:
+def finish_objects_at_end_step(time: datetime, db_session: Session, remove_from_equipment=False, commit=True) -> None:
     query = db_session.query(Object).where(
         Object.next_step == None,
         Object.status == "RUNNING",
@@ -65,7 +65,7 @@ def finish_objects_at_end_step(time: datetime,db_session: Session, remove_from_e
 
 
 def start_executing(equipment: Equipment, time: datetime, db_session: Session) -> None:
-    n = equipment.capacity - count_objects_executing(equipment, db_session)
+    n = equipment.lenght - count_objects_executing(equipment, db_session)
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
         Object.status == "BUFFER"
@@ -97,7 +97,7 @@ end_of_day = datetime.strptime("17:00", "%H:%M").time()
 
 
 def is_working_time(time: datetime) -> bool:
-    if time.weekday() in [5,6]:
+    if time.weekday() in [5, 6]:
         return False
     t = time.time()
     if t >= start_of_day and t < start_of_lunch:
@@ -107,12 +107,11 @@ def is_working_time(time: datetime) -> bool:
     return False
 
 
-
 def update_current(time: datetime, db_session: Session) -> None:
     finish_objects_at_end_step(time, db_session, remove_from_equipment=True)
     if not is_working_time(time):
         return
-    #Get free workers
+    # Get free workers
     query = db_session.query(Worker).where(
         ~Worker.cases.any(Case.objects.any(Object.status != "FINISHED"))
     )
@@ -124,7 +123,7 @@ def update_current(time: datetime, db_session: Session) -> None:
                 obj.current_location = "WORKER_DESK"
             db_session.add(c)
             db_session.commit()
-            
+
     query2 = db_session.query(Equipment).order_by(Equipment.order)
     for equipment in query2.all():
         logging.info(f"Analysing equipment {equipment}")
@@ -141,7 +140,7 @@ def update_current(time: datetime, db_session: Session) -> None:
 
 
 def simulate_lab(type: Literal['pipeline', 'current']) -> None:
-    term = Terminal()
+    term = CustomTerminal()
     with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
         inicio = datetime(2024, 1, 1, 0, 0, 0)
         fim = datetime(2024, 1, 31, 23, 59, 59)
@@ -151,22 +150,13 @@ def simulate_lab(type: Literal['pipeline', 'current']) -> None:
                 update_pipeline(time, db_session)
             else:
                 update_current(time, db_session)
-            draw_screen(term, time, count_finished_objects(db_session), count_finished_cases(db_session), (i+1)/iter.steps)
-       
+            term.draw_screen(time, count_finished_objects(db_session), count_finished_cases(db_session), (i+1)/iter.steps, db_session)
 
 
-def draw_screen(term: Terminal, time: datetime, objects: int, cases: int, progress: float) -> None:
+def print_stats() -> None:
+    term = CustomTerminal()
+    with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
+        term.draw_screen(None, count_finished_objects(db_session), count_finished_cases(db_session), None, db_session)
+        input()
 
-    with term.location(0, 0):  
-        print(term.clear) 
-        print(term.bold("Pipeline simulator"))
-        print("".ljust(30, "-"))
-        print(f"{term.bold('Time:')} {time.strftime("%d/%m/%Y %H:%M:%S")}")
-        print(f"{term.bold('Number of objects:')} {objects}")
-        print(f"{term.bold('Number of cases:')} {cases}")
-        
-        # Draw progress bar
-        bar_length = 40 
-        completed = int(bar_length * progress)
-        bar = "█" * completed + "-" * (bar_length - completed)
-        print(f"{term.bold('Progress:')} [{bar}] {progress * 100:.2f}%")
+
