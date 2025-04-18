@@ -22,7 +22,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.15.0",
+    "mypy>=1.13.0",
     "pandas-stubs>=2.2.3.241126",
     "types-openpyxl>=3.1.5.20250306",
     "types-sqlalchemy-utils>=1.1.0",

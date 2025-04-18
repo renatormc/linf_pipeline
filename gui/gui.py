@@ -2,9 +2,10 @@ from typing import Literal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar, QFormLayout, QLineEdit
 from PySide6.QtCore import Qt
 
+from gui.equipments_table import EquipmentsTable
 from models import DBSession, Equipment
 from repo import count_objects_in_equipments
-from thread import PData, Worker
+from gui.thread import PData, Worker
 
 class SimulatorWindow(QWidget):
     def __init__(self, sim_type: Literal['pipeline', 'current']) -> None:
@@ -26,7 +27,9 @@ class SimulatorWindow(QWidget):
         self.setLayout(self.main_layout)
         
         self.main_layout.addWidget(QLabel("Equipamentos"))
-        self.setup_twd_equipments()
+        
+        self.eq_pipeline = EquipmentsTable(self, 'pipeline')
+        self.main_layout.addWidget(self.eq_pipeline)
         
         self.main_layout.addWidget(QLabel("Finalizados"))
         self.setup_finished()
@@ -46,41 +49,6 @@ class SimulatorWindow(QWidget):
         """)
         self.main_layout.addWidget(self.pgbar)
         
-    def add_table_row(self, name: str, capacity: int, length: int, running: int) -> None:
-        row_position = self.twd_equipments.rowCount()
-        self.twd_equipments.insertRow(row_position)
-        self.eqmap[name] = row_position
-        item = QTableWidgetItem(name)
-        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.twd_equipments.setItem(row_position, 0, item)
-        item = QTableWidgetItem(str(capacity))
-        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.twd_equipments.setItem(row_position, 1, item)
-        item = QTableWidgetItem(str(length))
-        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.twd_equipments.setItem(row_position, 2, item)
-        item = QTableWidgetItem(str(running))
-        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.twd_equipments.setItem(row_position, 3, item)
-        
-    def update_equipment(self, name: str, running: int) -> None:
-        row = self.eqmap[name]
-        item = self.twd_equipments.item(row, 3)
-        if item:
-            item.setText(str(running))
-
-
-    def setup_twd_equipments(self) -> None:
-        self.twd_equipments = QTableWidget(0, 4)
-        self.twd_equipments.horizontalHeader().setStretchLastSection(True)
-        self.twd_equipments.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) #type: ignore
-        self.twd_equipments.setHorizontalHeaderLabels(["Equipamento", "Capacidade", "Quantidade", "Executando"])
-        
-        with DBSession() as db_session:
-            for eq in self.equipments:
-                self.add_table_row(eq.name, eq.capacity, eq.lenght,  count_objects_in_equipments(db_session, eq.name))        
-
-        self.main_layout.addWidget(self.twd_equipments)
         
     def setup_finished(self) -> None:
         lay = QFormLayout()
