@@ -5,6 +5,7 @@ from gui.finished_form import FinishedForm
 from models import DBSession, Equipment
 from gui.thread import PData, Worker
 
+
 class SimulatorWindow(QWidget):
     def __init__(self) -> None:
         self.worker: Worker | None = None
@@ -14,7 +15,6 @@ class SimulatorWindow(QWidget):
         self.eqmap: dict[str, int] = {}
         self.setup_ui()
         self.start_thread()
-        
 
     def setup_ui(self) -> None:
         self.setWindowTitle("Pipeline simulator")
@@ -22,9 +22,9 @@ class SimulatorWindow(QWidget):
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
-        
+
         self.main_layout.addWidget(QLabel("Equipamentos"))
-        
+
         lay = QHBoxLayout()
 
         lay2 = QVBoxLayout()
@@ -44,13 +44,13 @@ class SimulatorWindow(QWidget):
         lay.addLayout(lay2)
         lay.addLayout(lay3)
         self.main_layout.addLayout(lay)
-        
+
         lay4 = QFormLayout()
         self.led_time = QLineEdit()
         self.led_time.setReadOnly(True)
         lay4.addRow("Tempo:", self.led_time)
         self.main_layout.addLayout(lay4)
-        
+
         self.pgbar = QProgressBar()
         self.pgbar.setStyleSheet("""
             QProgressBar {
@@ -65,19 +65,17 @@ class SimulatorWindow(QWidget):
             }
         """)
         self.main_layout.addWidget(self.pgbar)
-        
-            
-                
+
     def update_progress(self, p: PData) -> None:
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments_pipeline.items():
             self.eq_pipeline.update_equipment(name, running)
         for name, running in p.equipments_current.items():
             self.eq_current.update_equipment(name, running)
-        self.frm_finished_current.update(p.finished_objects_current, p.finished_cases_current)
-        self.frm_finished_pipeline.update(p.finished_objects_pipeline, p.finished_cases_pipeline)
+        self.frm_finished_current.update_values(p.finished_objects_current, p.finished_cases_current)
+        self.frm_finished_pipeline.update_values(p.finished_objects_pipeline, p.finished_cases_pipeline)
         self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
-        
+
     def start_thread(self) -> None:
         self.worker = Worker()
         self.pgbar.setMaximum(self.worker.iter.steps)
@@ -88,7 +86,3 @@ class SimulatorWindow(QWidget):
         if self.worker:
             self.worker.terminate()
         return super().closeEvent(event)
-
-
-
-   
