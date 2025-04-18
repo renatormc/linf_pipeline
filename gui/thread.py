@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from PySide6.QtCore import QThread, Signal
 
 from models import DBSession
-from repo import count_finished_cases, count_finished_objects, count_objects_in_equipments
+from repo import count_finished_cases, count_finished_objects, count_objects_in_equipments, get_equipments_names
 from simulation import IntervalIterator, update_current, update_pipeline
 
 
@@ -22,8 +22,9 @@ class PData:
 class Worker(QThread):
     progress = Signal(PData)
 
-    def __init__(self, equipments: list[str], *args, **kwargs):
-        self.equipments = equipments
+    def __init__(self, *args, **kwargs):
+        with DBSession() as db_session:
+            self.equipments = get_equipments_names(db_session)
         super().__init__(*args, **kwargs)
         inicio = datetime(2024, 1, 1, 0, 0, 0)
         fim = datetime(2024, 1, 31, 23, 59, 59)

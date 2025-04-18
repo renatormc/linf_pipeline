@@ -13,10 +13,9 @@ class EquipmentsTable(QTableWidget):
         super().__init__(parent)
         self.sim_method = sim_method
         self.eqmap: dict[str, int] = {}
-        self.twd_equipments = QTableWidget(0, 4)
-        self.twd_equipments.horizontalHeader().setStretchLastSection(True)
-        self.twd_equipments.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) #type: ignore
-        self.twd_equipments.setHorizontalHeaderLabels(["Equipamento", "Capacidade", "Quantidade", "Executando"])
+        self.horizontalHeader().setStretchLastSection(True)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) #type: ignore
+        self.setHorizontalHeaderLabels(["Equipamento", "Capacidade", "Quantidade", "Executando"])
         
         with DBSession() as db_session:
             eqs = db_session.query(Equipment).where(Equipment.method == self.sim_method).all()

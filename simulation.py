@@ -1,16 +1,15 @@
 from datetime import datetime, timedelta
 from sqlalchemy import and_
-from typing import Iterator, Literal
+from typing import Iterator
 import logging
-from tqdm import tqdm
-from models import Case, DBSession, Equipment, Object
+from custom_type import SIM_METHOD
+from models import Case, Equipment, Object
 from models import Worker
 import time
 from sqlalchemy.orm import Session
-from repo import count_finished_cases, count_finished_objects, count_objects_executing, \
+from repo import count_objects_executing, \
     get_next_case, get_object_step, get_waiting_equipment, get_waiting_equipment_on_workers_desk, \
     move_next_step, number_of_vacancies
-from term import CustomTerminal
 
 
 class IntervalIterator:
@@ -46,8 +45,9 @@ def get_perito_disponivel(db_session: Session) -> Worker | None:
     return query.first()
 
 
-def finish_objects_at_end_step(time: datetime, db_session: Session, remove_from_equipment=False, commit=True) -> None:
+def finish_objects_at_end_step(method: SIM_METHOD, time: datetime, db_session: Session, remove_from_equipment=False, commit=True) -> None:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == method),
         Object.next_step == None,
         Object.status == "RUNNING",
         Object.start_current_step_executing + Object.duration_current_step <= time
@@ -67,6 +67,7 @@ def finish_objects_at_end_step(time: datetime, db_session: Session, remove_from_
 def start_executing(equipment: Equipment, time: datetime, db_session: Session) -> None:
     n = equipment.lenght - count_objects_executing(equipment, db_session)
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == equipment.method),
         Object.current_location == equipment.name,
         Object.status == "BUFFER"
     ).order_by(Object.case_id).limit(n)
@@ -79,8 +80,8 @@ def start_executing(equipment: Equipment, time: datetime, db_session: Session) -
 
 
 def update_pipeline(time: datetime, db_session: Session) -> None:
-    finish_objects_at_end_step(time, db_session)
-    query = db_session.query(Equipment).order_by(Equipment.order.desc())
+    finish_objects_at_end_step("pipeline", time, db_session)
+    query = db_session.query(Equipment).where(Equipment.method == "pipeline").order_by(Equipment.order.desc())
     for equipment in query.all():
         logging.info(f"Analysing equipment {equipment}")
         n = number_of_vacancies(equipment, db_session)
@@ -108,15 +109,15 @@ def is_working_time(time: datetime) -> bool:
 
 
 def update_current(time: datetime, db_session: Session) -> None:
-    finish_objects_at_end_step(time, db_session, remove_from_equipment=True)
+    finish_objects_at_end_step("current", time, db_session, remove_from_equipment=True)
     if not is_working_time(time):
         return
     # Get free workers
     query = db_session.query(Worker).where(
-        ~Worker.cases.any(Case.objects.any(Object.status != "FINISHED"))
+        ~Worker.cases.any(and_(Case.objects.any(Object.status != "FINISHED"), Case.method == "current"))
     )
     for worker in query.all():
-        c = get_next_case(db_session)
+        c = get_next_case("current", db_session)
         if c:
             c.worker = worker
             for obj in c.objects:
@@ -124,7 +125,7 @@ def update_current(time: datetime, db_session: Session) -> None:
             db_session.add(c)
             db_session.commit()
 
-    query2 = db_session.query(Equipment).order_by(Equipment.order)
+    query2 = db_session.query(Equipment).where(Equipment.method == "current").order_by(Equipment.order)
     for equipment in query2.all():
         logging.info(f"Analysing equipment {equipment}")
         n = equipment.lenght - count_objects_executing(equipment, db_session)
@@ -139,24 +140,24 @@ def update_current(time: datetime, db_session: Session) -> None:
     db_session.commit()
 
 
-def simulate_lab(type: Literal['pipeline', 'current']) -> None:
-    term = CustomTerminal()
-    with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
-        inicio = datetime(2024, 1, 1, 0, 0, 0)
-        fim = datetime(2024, 1, 31, 23, 59, 59)
-        iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
-        for i, time in enumerate(iter):
-            if type == 'pipeline':
-                update_pipeline(time, db_session)
-            else:
-                update_current(time, db_session)
-            term.draw_screen(time, count_finished_objects(db_session), count_finished_cases(db_session), ((i+1)/iter.steps)*100, db_session)
+# def simulate_lab(type: Literal['pipeline', 'current']) -> None:
+#     term = CustomTerminal()
+#     with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
+#         inicio = datetime(2024, 1, 1, 0, 0, 0)
+#         fim = datetime(2024, 1, 31, 23, 59, 59)
+#         iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
+#         for i, time in enumerate(iter):
+#             if type == 'pipeline':
+#                 update_pipeline(time, db_session)
+#             else:
+#                 update_current(time, db_session)
+#             term.draw_screen(time, count_finished_objects(db_session), count_finished_cases(db_session), ((i+1)/iter.steps)*100, db_session)
 
 
-def print_stats() -> None:
-    term = CustomTerminal()
-    with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
-        term.draw_screen(None, count_finished_objects(db_session), count_finished_cases(db_session), None, db_session)
-        input()
+# def print_stats() -> None:
+#     term = CustomTerminal()
+#     with term.fullscreen(), term.hidden_cursor(), DBSession() as db_session:
+#         term.draw_screen(None, count_finished_objects(db_session), count_finished_cases(db_session), None, db_session)
+#         input()
 
 

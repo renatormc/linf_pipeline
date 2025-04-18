@@ -1,15 +1,11 @@
 from typing import Literal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar, QFormLayout, QLineEdit
-from PySide6.QtCore import Qt
-
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar, QFormLayout, QLineEdit
 from gui.equipments_table import EquipmentsTable
 from models import DBSession, Equipment
-from repo import count_objects_in_equipments
 from gui.thread import PData, Worker
 
 class SimulatorWindow(QWidget):
-    def __init__(self, sim_type: Literal['pipeline', 'current']) -> None:
-        self.sim_type = sim_type
+    def __init__(self) -> None:
         self.worker: Worker | None = None
         super().__init__()
         with DBSession() as db_session:
@@ -68,14 +64,14 @@ class SimulatorWindow(QWidget):
                 
     def update_progress(self, p: PData) -> None:
         self.pgbar.setValue(p.progress)
-        for name, running in p.equipments.items():
-            self.update_equipment(name, running)
-        self.led_cases_finished.setText(str(p.finished_cases))
-        self.led_obj_finished.setText(str(p.finished_objects))
+        for name, running in p.equipments_pipeline.items():
+            self.eq_pipeline.update_equipment(name, running)
+        self.led_cases_finished.setText(str(p.finished_cases_pipeline))
+        self.led_obj_finished.setText(str(p.finished_objects_pipeline))
         self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
         
     def start_thread(self) -> None:
-        self.worker = Worker(self.equipments, self.sim_type)
+        self.worker = Worker()
         self.pgbar.setMaximum(self.worker.iter.steps)
         self.worker.progress.connect(self.update_progress)
         self.worker.start()

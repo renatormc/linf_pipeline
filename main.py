@@ -11,17 +11,16 @@ def cli(ctx: click.Context) -> None:
 
 
 @cli.command("simulate")
-@click.argument('type', type=click.Choice(['pipeline', 'current']))
 @click.option('--restore',  is_flag=True, show_default=True, default=False, help="Restore database.")
-def simulate(type: Literal['pipeline', 'current'], restore: bool) -> None:
+def simulate(restore: bool) -> None:
     if restore:
         from manage import restore_db
         restore_db()
     import sys
     from PySide6.QtWidgets import QApplication
-    from gui import SimulatorWindow
+    from gui.gui import SimulatorWindow
     app = QApplication(sys.argv)
-    window = SimulatorWindow(type)
+    window = SimulatorWindow()
     window.show()
     sys.exit(app.exec())
 

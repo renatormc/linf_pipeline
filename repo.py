@@ -143,3 +143,8 @@ def clear_db(db_session: Session) -> None:
     for case_ in db_session.query(Case).all():
         db_session.delete(case_)
     db_session.commit()
+
+
+def get_equipments_names(db_session: Session) -> list[str]:
+    query = db_session.query(Equipment.name).where(Equipment.method == "pipeline")
+    return[item[0] for item in  query.all()]
