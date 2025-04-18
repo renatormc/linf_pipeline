@@ -70,17 +70,20 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_s
             and_(Object.status == "RUNNING", Object.start_current_step_executing + Object.duration_current_step <= time),
             Object.status == "INITIAL"
         )
-    ).order_by(Object.case_id).limit(limit)
+    )
+    if equipment.method == "current":
+        query = query.where(Object.case.has(Case.worker_id != None))
+    query = query.order_by(Object.case_id).limit(limit)
     return query.all()
 
 
-def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int, db_session: Session) -> Iterable[Object]:
-    query = db_session.query(Object).where(
-        Object.case.has(Case.method == equipment.method),
-        Object.status == "WORKER_DESK",
-        Object.next_step == equipment.name
-    ).order_by(Object.case_id).limit(limit)
-    return query.all()
+# def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int, db_session: Session) -> Iterable[Object]:
+#     query = db_session.query(Object).where(
+#         Object.case.has(Case.method == equipment.method),
+#         Object.current_location == "WORKER_DESK",
+#         Object.next_step == equipment.name
+#     ).order_by(Object.case_id).limit(limit)
+#     return query.all()
 
 
 def get_finished_executing(equipment: Equipment, time: datetime, db_session: Session) -> list[Object]:
@@ -97,6 +100,14 @@ def count_finished_cases(method: SIM_METHOD, db_session: Session) -> int:
     query = db_session.query(Case).where(
         Case.method == method,
         ~Case.objects.any(Object.status != "FINISHED")
+    )
+    return query.count()
+
+
+def count_cases_running(method: SIM_METHOD, db_session: Session) -> int:
+    query = db_session.query(Case).where(
+        Case.method == method,
+        Case.objects.any(Object.status == "RUNNING")
     )
     return query.count()
 
@@ -147,4 +158,4 @@ def clear_db(db_session: Session) -> None:
 
 def get_equipments_names(db_session: Session) -> list[str]:
     query = db_session.query(Equipment.name).where(Equipment.method == "pipeline")
-    return[item[0] for item in  query.all()]
+    return [item[0] for item in query.all()]

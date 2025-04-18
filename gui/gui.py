@@ -72,8 +72,8 @@ class SimulatorWindow(QWidget):
             self.eq_pipeline.update_equipment(name, running)
         for name, running in p.equipments_current.items():
             self.eq_current.update_equipment(name, running)
-        self.frm_finished_current.update_values(p.finished_objects_current, p.finished_cases_current)
-        self.frm_finished_pipeline.update_values(p.finished_objects_pipeline, p.finished_cases_pipeline)
+        self.frm_finished_current.update_values(p.finished_objects_current, p.finished_cases_current, p.cases_running_current)
+        self.frm_finished_pipeline.update_values(p.finished_objects_pipeline, p.finished_cases_pipeline, p.cases_running_pipeline)
         self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
 
     def start_thread(self) -> None:
