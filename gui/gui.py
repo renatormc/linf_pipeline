@@ -1,6 +1,7 @@
 from typing import Literal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar, QFormLayout, QLineEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar, QFormLayout, QLineEdit, QHBoxLayout
 from gui.equipments_table import EquipmentsTable
+from gui.finished_form import FinishedForm
 from models import DBSession, Equipment
 from gui.thread import PData, Worker
 
@@ -17,18 +18,38 @@ class SimulatorWindow(QWidget):
 
     def setup_ui(self) -> None:
         self.setWindowTitle("Pipeline simulator")
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 1000, 600)
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         
         self.main_layout.addWidget(QLabel("Equipamentos"))
         
+        lay = QHBoxLayout()
+
+        lay2 = QVBoxLayout()
+        self.eq_current = EquipmentsTable(self, 'current')
+        lay2.addWidget(QLabel("Corrente"))
+        lay2.addWidget(self.eq_current)
+        self.frm_finished_current = FinishedForm()
+        lay2.addWidget(self.frm_finished_current)
+
+        lay3 = QVBoxLayout()
         self.eq_pipeline = EquipmentsTable(self, 'pipeline')
-        self.main_layout.addWidget(self.eq_pipeline)
+        lay3.addWidget(QLabel("Pipeline"))
+        lay3.addWidget(self.eq_pipeline)
+        self.frm_finished_pipeline = FinishedForm()
+        lay3.addWidget(self.frm_finished_pipeline)
+
+        lay.addLayout(lay2)
+        lay.addLayout(lay3)
+        self.main_layout.addLayout(lay)
         
-        self.main_layout.addWidget(QLabel("Finalizados"))
-        self.setup_finished()
+        lay4 = QFormLayout()
+        self.led_time = QLineEdit()
+        self.led_time.setReadOnly(True)
+        lay4.addRow("Tempo:", self.led_time)
+        self.main_layout.addLayout(lay4)
         
         self.pgbar = QProgressBar()
         self.pgbar.setStyleSheet("""
@@ -45,29 +66,16 @@ class SimulatorWindow(QWidget):
         """)
         self.main_layout.addWidget(self.pgbar)
         
-        
-    def setup_finished(self) -> None:
-        lay = QFormLayout()
-        self.led_obj_finished = QLineEdit()
-        self.led_obj_finished.setText("0")
-        self.led_obj_finished.setReadOnly(True)
-        self.led_cases_finished = QLineEdit()
-        self.led_cases_finished.setText("0")
-        self.led_cases_finished.setReadOnly(True)
-        self.led_time = QLineEdit()
-        self.led_time.setReadOnly(True)
-        lay.addRow("Objetos finalizados:", self.led_obj_finished)
-        lay.addRow("Casos finalizados:", self.led_cases_finished)
-        lay.addRow("Tempo:", self.led_time)
-        self.main_layout.addLayout(lay)
-        
+            
                 
     def update_progress(self, p: PData) -> None:
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments_pipeline.items():
             self.eq_pipeline.update_equipment(name, running)
-        self.led_cases_finished.setText(str(p.finished_cases_pipeline))
-        self.led_obj_finished.setText(str(p.finished_objects_pipeline))
+        for name, running in p.equipments_current.items():
+            self.eq_current.update_equipment(name, running)
+        self.frm_finished_current.update(p.finished_objects_current, p.finished_cases_current)
+        self.frm_finished_pipeline.update(p.finished_objects_pipeline, p.finished_cases_pipeline)
         self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
         
     def start_thread(self) -> None:

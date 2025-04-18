@@ -10,7 +10,7 @@ from repo import count_objects_in_equipments
 
 class EquipmentsTable(QTableWidget):
     def __init__(self, parent, sim_method: SIM_METHOD) -> None:
-        super().__init__(parent)
+        super().__init__(parent, rowCount=0, columnCount=4)
         self.sim_method = sim_method
         self.eqmap: dict[str, int] = {}
         self.horizontalHeader().setStretchLastSection(True)
