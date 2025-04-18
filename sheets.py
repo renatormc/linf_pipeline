@@ -4,7 +4,7 @@ import pandas as pd
 import random
 import openpyxl
 
-openpyxl.reader.excel.warnings.simplefilter(action='ignore')
+# openpyxl.reader.excel.warnings.simplefilter(action='ignore')
 
 
 @dataclass
