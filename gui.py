@@ -11,6 +11,7 @@ from thread import PData, Worker
 class SimulatorWindow(QWidget):
     def __init__(self, sim_type: Literal['pipeline', 'current']) -> None:
         self.sim_type = sim_type
+        self.worker: Worker | None = None
         super().__init__()
         with DBSession() as db_session:
             self.equipments = db_session.query(Equipment).all()
@@ -85,6 +86,7 @@ class SimulatorWindow(QWidget):
         
                 
     def update_progress(self, p: PData) -> None:
+        print(p.progress)
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments.items():
             self.update_equipment(name, running)
@@ -96,6 +98,10 @@ class SimulatorWindow(QWidget):
         self.worker.progress.connect(self.update_progress)
         self.worker.start()
 
+    def closeEvent(self, event) -> None:
+        if self.worker:
+            self.worker.terminate()
+        return super().closeEvent(event)
 
 
 
