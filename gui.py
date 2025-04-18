@@ -34,6 +34,18 @@ class SimulatorWindow(QWidget):
         self.setup_finished()
         
         self.pgbar = QProgressBar()
+        self.pgbar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid grey;
+                border-radius: 5px;
+                text-align: center;
+            }
+
+            QProgressBar::chunk {
+                background-color: #00c853;  /* classic green */
+                width: 20px;
+            }
+        """)
         self.main_layout.addWidget(self.pgbar)
         
     def add_table_row(self, name: str, capacity: int, length: int, running: int) -> None:
@@ -80,18 +92,21 @@ class SimulatorWindow(QWidget):
         self.led_cases_finished = QLineEdit()
         self.led_cases_finished.setText("0")
         self.led_cases_finished.setReadOnly(True)
+        self.led_time = QLineEdit()
+        self.led_time.setReadOnly(True)
         lay.addRow("Objetos finalizados:", self.led_obj_finished)
         lay.addRow("Casos finalizados:", self.led_cases_finished)
+        lay.addRow("Tempo:", self.led_time)
         self.main_layout.addLayout(lay)
         
                 
     def update_progress(self, p: PData) -> None:
-        print(p.progress)
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments.items():
             self.update_equipment(name, running)
         self.led_cases_finished.setText(str(p.finished_cases))
         self.led_obj_finished.setText(str(p.finished_objects))
+        self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
         
     def start_thread(self) -> None:
         self.worker = Worker(self.equipments, self.sim_type)

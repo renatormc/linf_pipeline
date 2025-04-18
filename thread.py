@@ -15,6 +15,7 @@ class PData:
     equipments: dict[str, int]   
     finished_objects: int
     finished_cases: int
+    time: datetime
 
 class Worker(QThread):
     progress = Signal(PData) 
@@ -39,6 +40,7 @@ class Worker(QThread):
                     equipments={eq.name: count_objects_in_equipments(db_session, eq.name) for eq in self.equipments},
                     progress=i+1,
                     finished_cases=count_finished_cases(db_session),
-                    finished_objects=count_finished_objects(db_session)
+                    finished_objects=count_finished_objects(db_session),
+                    time= time
                 ))
                 
