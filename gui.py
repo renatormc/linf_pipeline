@@ -1,7 +1,5 @@
-import sys
 from typing import Literal
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, \
-    QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar, QFormLayout, QLineEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView, QProgressBar, QFormLayout, QLineEdit
 from PySide6.QtCore import Qt
 
 from models import DBSession, Equipment

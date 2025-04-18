@@ -54,6 +54,7 @@ class Case(Base):
     objects: Mapped[list['Object']] = relationship(back_populates="case", cascade="all, delete-orphan")
     start: Mapped[datetime | None] = mapped_column(sa.DateTime)
     end: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    method: Mapped[str] = mapped_column(sa.String(30))
     worker_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("worker.id"))
     worker: Mapped[Optional['Worker']] = relationship(back_populates="cases", uselist=False)
 
@@ -89,6 +90,7 @@ class Equipment(Base):
     name: Mapped[str] = mapped_column(sa.String(100))
     lenght: Mapped[int] = mapped_column(sa.Integer)
     capacity: Mapped[int] = mapped_column(sa.Integer)
+    method: Mapped[str] = mapped_column(sa.String(30))
     order: Mapped[int] = mapped_column(sa.Integer)
     
     def __repr__(self):

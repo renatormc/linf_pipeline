@@ -3,6 +3,7 @@ from typing import Iterable
 import logging
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+from custom_type import SIM_METHOD
 from models import Case, Equipment, Object, Step, Worker
 
 
@@ -16,6 +17,7 @@ def get_object_step(object: Object, name: str, db_session: Session) -> Step:
 
 def count_objects_on_buffer(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == equipment.method),
         Object.current_location == equipment.name,
         Object.status == "BUFFER"
     )
@@ -25,7 +27,8 @@ def count_objects_on_buffer(equipment: Equipment, db_session: Session) -> int:
 def count_objects_executing(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
-        Object.status == "RUNNING"
+        Object.status == "RUNNING",
+        Object.case.has(Case.method == equipment.method)
     )
     return query.count()
 
@@ -33,6 +36,7 @@ def count_objects_executing(equipment: Equipment, db_session: Session) -> int:
 def count_total_objects(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
+        Object.case.has(Case.method == equipment.method)
     )
 
     return query.count()
@@ -60,6 +64,7 @@ def move_next_step(object: Object, db_session: Session, commit=True) -> None:
 
 def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_session: Session) -> Iterable[Object]:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == equipment.method),
         Object.next_step == equipment.name,
         or_(
             and_(Object.status == "RUNNING", Object.start_current_step_executing + Object.duration_current_step <= time),
@@ -71,6 +76,7 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_s
 
 def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int, db_session: Session) -> Iterable[Object]:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == equipment.method),
         Object.status == "WORKER_DESK",
         Object.next_step == equipment.name
     ).order_by(Object.case_id).limit(limit)
@@ -79,6 +85,7 @@ def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int, db_s
 
 def get_finished_executing(equipment: Equipment, time: datetime, db_session: Session) -> list[Object]:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == equipment.method),
         Object.current_location == equipment.name,
         Object.status == "RUNNING",
         Object.start_current_step_executing + Object.duration_current_step <= time
@@ -86,30 +93,34 @@ def get_finished_executing(equipment: Equipment, time: datetime, db_session: Ses
     return query.all()
 
 
-def count_finished_cases(db_session: Session) -> int:
+def count_finished_cases(method: SIM_METHOD, db_session: Session) -> int:
     query = db_session.query(Case).where(
+        Case.method == method,
         ~Case.objects.any(Object.status != "FINISHED")
     )
     return query.count()
 
 
-def count_finished_objects(db_session: Session) -> int:
+def count_finished_objects(method: SIM_METHOD, db_session: Session) -> int:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == method),
         Object.status == "FINISHED"
     )
     return query.count()
 
 
-def count_objects_in_equipments(db_session: Session, name: str) -> int:
+def count_objects_in_equipments(method: SIM_METHOD, db_session: Session, name: str) -> int:
     query = db_session.query(Object).where(
+        Object.case.has(Case.method == method),
         Object.current_location == name,
         Object.status == "RUNNING"
     )
     return query.count()
 
 
-def get_next_case(db_session: Session) -> Case | None:
+def get_next_case(method: SIM_METHOD, db_session: Session) -> Case | None:
     query = db_session.query(Case).where(
+        Case.method == method,
         ~Case.objects.any(Object.status != "INITIAL"),
         Case.worker_id == None
     ).order_by(Case.id)
