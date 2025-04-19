@@ -2,7 +2,7 @@ from typing import Literal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar, QFormLayout, QLineEdit, QHBoxLayout
 from gui.equipments_table import EquipmentsTable
 from gui.finished_form import FinishedForm
-from models import DBSession, Equipment
+from models import DBSession, EquipmentModel
 from gui.thread import PData, Worker
 
 
@@ -11,7 +11,7 @@ class SimulatorWindow(QWidget):
         self.worker: Worker | None = None
         super().__init__()
         with DBSession() as db_session:
-            self.equipments = db_session.query(Equipment).all()
+            self.equipments = db_session.query(EquipmentModel).all()
         self.eqmap: dict[str, int] = {}
         self.setup_ui()
         self.start_thread()

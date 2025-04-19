@@ -1,5 +1,6 @@
 from typing import Literal
 import click
+import config
 from manage import create_postgres_db
 import signal
 
@@ -43,15 +44,19 @@ def restore() -> None:
 @cli.command("createdb")
 @click.argument("number", type=int)
 def createdb(number: int) -> None:
+    try:
+        config.DBPATH.unlink()
+    except FileNotFoundError:
+        pass
     from pericia_generator import populate_db_cases
     from manage import backup_db
     from models import create_tables
-    create_postgres_db()
+    # create_postgres_db()
     create_tables()
     print("Populating database")
     populate_db_cases(number)
-    print("backup database")
-    backup_db()
+    # print("backup database")
+    # backup_db()
 
 
   

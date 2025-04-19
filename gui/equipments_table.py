@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt
 from custom_type import SIM_METHOD
-from models import DBSession, Equipment
+from models import DBSession, EquipmentModel
 from repo import count_objects_in_equipments
 
 
@@ -16,7 +16,7 @@ class EquipmentsTable(QTableWidget):
         self.setHorizontalHeaderLabels(["Equipamento", "Capacidade", "Quantidade", "Executando"])
         
         with DBSession() as db_session:
-            eqs = db_session.query(Equipment).where(Equipment.method == self.sim_method).all()
+            eqs = db_session.query(EquipmentModel).where(EquipmentModel.method == self.sim_method).all()
             for eq in eqs:
                 self.add_table_row(eq.name, eq.capacity, eq.lenght,  count_objects_in_equipments(self.sim_method, db_session, eq.name))   
 

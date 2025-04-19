@@ -5,17 +5,12 @@ from sqlalchemy.types import TypeDecorator, Float
 import sqlalchemy as sa
 import config
 
-# engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
-# engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
+
 def create_engine() -> sa.Engine:
     # return sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
-    return sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
-# engine = sa.create_engine("sqlite://")
+    # return sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
+    return  sa.create_engine(f"sqlite:///{config.DBPATH}")
 
-# SessionMaker = sessionmaker(autocommit=False,
-#                             autoflush=False,
-#                             bind=engine)
-# db_session = scoped_session(SessionMaker)
 
 def DBSession() -> Session:
     return Session(create_engine())
@@ -38,25 +33,26 @@ class Base(DeclarativeBase):
 #             return timedelta(seconds=value)
 
 
-class Worker(Base):
+class WorkerModel(Base):
     __tablename__ = 'worker'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
-    cases: Mapped[list['Case']] = relationship(back_populates="worker")
+    cases: Mapped[list['CaseModel']] = relationship(back_populates="worker")
 
     def __repr__(self):
         return str(self.id)
 
 
-class Case(Base):
+class CaseModel(Base):
     __tablename__ = 'case'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
-    objects: Mapped[list['Object']] = relationship(back_populates="case", cascade="all, delete-orphan")
+    evidences: Mapped[list['EvidenceModel']] = relationship(back_populates="case", cascade="all, delete-orphan")
     start: Mapped[datetime | None] = mapped_column(sa.DateTime)
     end: Mapped[datetime | None] = mapped_column(sa.DateTime)
     method: Mapped[str] = mapped_column(sa.String(30))
     worker_id: Mapped[int | None] = mapped_column(sa.Integer, sa.ForeignKey("worker.id"))
-    worker: Mapped[Optional['Worker']] = relationship(back_populates="cases", uselist=False)
+    worker: Mapped[Optional['WorkerModel']] = relationship(back_populates="cases", uselist=False)
+
 
     def __repr__(self):
         return str(self.id)
@@ -65,26 +61,21 @@ class Case(Base):
 StatusObjeto = Literal["BUFFER", "RUNNING", "INITIAL", "FINISHED"]
 
 
-class Object(Base):
-    __tablename__ = 'object'
+class EvidenceModel(Base):
+    __tablename__ = 'evidence'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     type: Mapped[str] = mapped_column(sa.String(100))
     subtype: Mapped[str] = mapped_column(sa.String(100))
-    status: Mapped[StatusObjeto] = mapped_column(sa.String(100), default="INITIAL")
-    current_location: Mapped[str | None] = mapped_column(sa.String(100))
-    next_step: Mapped[str | None] = mapped_column(sa.String(100))
-    duration_current_step: Mapped[timedelta | None] = mapped_column(sa.Interval)
-    start_current_step_executing: Mapped[datetime | None] = mapped_column(sa.DateTime)
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
-    case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)
-    steps: Mapped[list['Step']] = relationship(back_populates="object", cascade="all, delete-orphan", order_by="Step.order.asc()")
+    case: Mapped['CaseModel'] = relationship(back_populates="evidences", uselist=False)
+    steps: Mapped[list['StepModel']] = relationship(back_populates="evidence", cascade="all, delete-orphan", order_by="StepModel.order.asc()")
     
 
     def __repr__(self):
         return f"{self.type} {self.id}"
 
 
-class Equipment(Base):
+class EquipmentModel(Base):
     __tablename__ = 'equipment'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
@@ -97,7 +88,7 @@ class Equipment(Base):
         return self.name
 
 
-class Step(Base):
+class StepModel(Base):
     __tablename__ = 'step'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
@@ -105,8 +96,8 @@ class Step(Base):
     duration: Mapped[timedelta] = mapped_column(sa.Interval)
     next_step: Mapped[str | None] = mapped_column(sa.String)
     previous_step: Mapped[str | None] = mapped_column(sa.String)
-    object_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("object.id"))
-    object: Mapped['Object'] = relationship(back_populates="steps", uselist=False)
+    evidence_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("evidence.id"))
+    evidence: Mapped['EvidenceModel'] = relationship(back_populates="steps", uselist=False)
    
 
 
