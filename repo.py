@@ -72,18 +72,19 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_s
         )
     )
     if equipment.method == "current":
-        query = query.where(Object.case.has(Case.worker_id != None))
+        # query = query.where(Object.case.has(Case.worker_id != None))
+        query = query.where(Object.case.has(
+            ~Case.worker.has(
+                Worker.cases.any(
+                    and_(
+                        Case.method == equipment.method,
+                        ~Case.objects.any(Object.status != "FINISHED")
+                    )
+                )
+            )
+        ))
     query = query.order_by(Object.case_id).limit(limit)
     return query.all()
-
-
-# def get_waiting_equipment_on_workers_desk(equipment: Equipment, limit: int, db_session: Session) -> Iterable[Object]:
-#     query = db_session.query(Object).where(
-#         Object.case.has(Case.method == equipment.method),
-#         Object.current_location == "WORKER_DESK",
-#         Object.next_step == equipment.name
-#     ).order_by(Object.case_id).limit(limit)
-#     return query.all()
 
 
 def get_finished_executing(equipment: Equipment, time: datetime, db_session: Session) -> list[Object]:
