@@ -105,6 +105,10 @@ def count_finished_cases(method: SIM_METHOD, db_session: Session) -> int:
 
 
 def count_cases_running(method: SIM_METHOD, db_session: Session) -> int:
+    if method == "current":
+        return db_session.query(Case).where(
+            Case.worker_id != None
+        ).count()
     query = db_session.query(Case).where(
         Case.method == method,
         Case.objects.any(Object.status == "RUNNING")
