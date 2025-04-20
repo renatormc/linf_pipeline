@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import and_
 from typing import Iterator
 import logging
+from config import DB_USER
 from custom_type import SIM_METHOD
 from models import Case, Equipment, Object
 from models import Worker
@@ -75,12 +76,44 @@ def start_executing(equipment: Equipment, time: datetime, db_session: Session) -
     db_session.commit()
 
 
+def worker_finish_cases(db_session: Session) -> None:
+    query = db_session.query(Case).where(
+        Case.worker_id != None,
+        Case.method == "current",
+        ~Case.objects.any(Object.status != "FINISHED")
+    )
+    for c in query.all():
+        c.worker_id = None
+        db_session.add(c)
+    db_session.commit()
+
+# def update_current( time: datetime, db_session: Session) -> None:
+#     if not is_working_time(time):
+#         return
+#     finish_objects_at_end_step("current", time, db_session)
+#     query = db_session.query(Worker).where(Worker)
+
+
+# def update_pipeline( time: datetime, db_session: Session) -> None:
+#     finish_objects_at_end_step("pipeline", time, db_session)
+#     query = db_session.query(Equipment).where(Equipment.method == "pipeline").order_by(Equipment.order.desc())
+#     for equipment in query.all():
+#         logging.info(f"Analysing equipment {equipment}")
+#         n = number_of_vacancies(equipment, db_session)
+#         objects = get_waiting_equipment(equipment, time, n, db_session)
+#         for object in objects:
+#             move_next_step(object, db_session)
+#         start_executing(equipment, time, db_session)
+
+
+
 def update_lab(method: SIM_METHOD, time: datetime, db_session: Session) -> None:
     if method == "current" and not is_working_time(time):
         return
     finish_objects_at_end_step(method, time, db_session)
-    if method == "current":
-        atribuir_novas(db_session)
+    worker_finish_cases(db_session)
+    # if method == "current":
+    #     atribuir_novas(db_session)
     query = db_session.query(Equipment).where(Equipment.method == method).order_by(Equipment.order.desc())
     for equipment in query.all():
         logging.info(f"Analysing equipment {equipment}")
