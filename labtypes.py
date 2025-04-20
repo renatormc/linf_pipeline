@@ -22,21 +22,13 @@ class CaseQueue:
 
     def pop_next_waiting_equipment(self, name: str) -> Optional[CaseAndEvidence]:
         for i, case in enumerate(self.cases):
-            obj = case.get_evidence_wating_equipment(name)
-            if obj:
-                return CaseAndEvidence(
-                    case=self.cases.pop(i),
-                    evidence=obj
-                )
+            for ev in case.evidences:
+                if ev.equipment is None and ev.next_step and ev.next_step.name == name:
+                    return CaseAndEvidence(
+                        case=self.cases.pop(i),
+                        evidence=ev
+                    )
         return None
-
-
-class FinishedCaseDeposit:
-    def __init__(self) -> None:
-        self.cases: list['Case'] = []
-
-    def add_case(self, value: 'Case') -> None:
-        self.cases.append(value)
 
 
 class Case:
@@ -70,8 +62,10 @@ class Evidence:
         self.id = id
         self.case = case
         self.steps: list[Step] = steps
+        self.steps_map = {e.name: e for e in self.steps}
+        self.steps_name = [e.name for e in self.steps]
         self.steps_finished: list[str] = []
-        self.next_step = steps[0]
+        self.next_step: Optional['Step'] = steps[0]
         self._finish_executing: datetime | None = None
         self.equipment: Optional['Equipment'] = None
 
@@ -88,13 +82,15 @@ class Evidence:
     @property
     def is_finished(self) -> bool:
         return self.next_step is None
+    
+    def get_step_by_name(self, name: str) -> 'Step':
+        return self.steps_map[name]
 
-    def register_step_finished(self, step: 'Step') -> None:
-        index = self.steps.index(step)
+    def register_step_finished(self, name: str) -> None:
+        index = self.steps_name.index(name)
         if index == len(self.steps) - 1:
             self.next_step = None
             self.case.register_finish_evidence(self)
-
 
 
 class Equipment:
@@ -121,21 +117,28 @@ class Equipment:
             if len(self.buffer) == 0 or len(self.executing) == self.quantity:
                 break
             obj = self.buffer.pop()
-            obj.finish_executing_timestamp = time + obj.get_step(self.name).duration
+            obj.finish_executing_timestamp = time + obj.get_step_by_name(self.name).duration
             self.executing.append(obj)
             ret.append(obj)
         return ret
-
-    def pop_finished(self, time: datetime) -> list[Evidence]:
-        evs: list[Evidence] = []
-        i = 0
-        while i < len(self.executing):
-            ev = self.executing[i]
-            if ev.finish_executing_timestamp >= time:
-                ev = self.executing.pop(i)
-                ev.equipment = None
-                ev.register_step_finished(self.name)
-                evs.append(ev)
-            else:
-                i += 1
-        return evs
+    
+    def get_finished(self, time: datetime) -> list[Evidence]:
+        return [e for e in self.executing if e.finish_executing_timestamp >= time]
+    
+    def pop_finished_evidence(self, ev: Evidence) -> None:
+        index = self.executing.index(ev)
+        self.executing.pop(index)
+    
+    # def pop_finished(self, time: datetime) -> list[Evidence]:
+    #     evs: list[Evidence] = []
+    #     i = 0
+    #     while i < len(self.executing):
+    #         ev = self.executing[i]
+    #         if ev.finish_executing_timestamp >= time:
+    #             ev = self.executing.pop(i)
+    #             ev.equipment = None
+    #             ev.register_step_finished(ev.)
+    #             evs.append(ev)
+    #         else:
+    #             i += 1
+    #     return evs
