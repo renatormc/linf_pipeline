@@ -3,6 +3,7 @@ from sqlalchemy import and_, func
 from typing import Iterator
 import logging
 from config import DB_USER
+import config
 from custom_type import SIM_METHOD
 from models import Case, Equipment, Object
 from models import Worker
@@ -112,7 +113,6 @@ end_of_day = datetime.strptime("17:00", "%H:%M").time()
 
 
 def is_working_time(time: datetime) -> bool:
-    return True
     if time.weekday() in [5, 6]:
         return False
     t = time.time()
@@ -126,7 +126,7 @@ def is_working_time(time: datetime) -> bool:
 def atribuir_novas(db_session: Session) -> None:
     query = db_session.query(Worker).outerjoin(Worker.cases) \
     .group_by(Worker.id) \
-    .having(func.count(Case.id) < 2)
+    .having(func.count(Case.id) < config.MAX_CASES_PER_WORKER)
     for worker in query.all():
         c = get_next_case("current", db_session)
         if c:

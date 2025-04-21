@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import config
 from manage import backup_db
 from models import Step, Object, Case, Worker,  Equipment,  DBSession
 from sheets import EtapaData, Planilha
@@ -27,7 +28,7 @@ def new_objects(pla: Planilha) -> tuple[Object, Object]:
     type = pla.gerar_tipo_objeto()
     subtype = pla.gerar_subtipo_objeto(type)
     for objeto in objetos:
-        objeto.type = pla.gerar_tipo_objeto()
+        objeto.type = type
         objeto.subtype = subtype
         steps: list[Step] = []
         for i, item in enumerate(pla.get_etapas(objeto.type, objeto.subtype)):
@@ -50,7 +51,7 @@ def populate_db_cases(numero: int) -> None:
         pla = Planilha()
 
         # cadastrar peritos
-        for i in range(12):
+        for i in range(config.N_WORKERS):
             perito = Worker()
             perito.name = f"Perito {i+1}"
             db_session.add(perito)
