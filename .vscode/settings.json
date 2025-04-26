@@ -1,6 +1,0 @@
-{
-    "terminal.integrated.env.linux": {
-        "UV_PROJECT_ENVIRONMENT": "/home/renato/.venvs/linf_pipeline"
-    },
-    "mypy.runUsingActiveInterpreter": true,
-}
