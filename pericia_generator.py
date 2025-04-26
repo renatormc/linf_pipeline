@@ -1,8 +1,6 @@
-from dataclasses import dataclass
 import config
-from manage import backup_db
 from models import Step, Object, Case, Worker,  Equipment,  DBSession
-from sheets import EtapaData, Planilha
+from sheets import Planilha
 
 
 def new_equipments(nome: str, quantidade: int, buffer: int, order: int) -> tuple[Equipment, Equipment]:
@@ -51,9 +49,10 @@ def populate_db_cases(numero: int) -> None:
         pla = Planilha()
 
         # cadastrar peritos
-        for i in range(config.N_WORKERS):
+        for p in pla.get_peritos():
             perito = Worker()
-            perito.name = f"Perito {i+1}"
+            perito.name = p.nome
+            perito.day_sequence = p.sequencia
             db_session.add(perito)
         db_session.commit()
 

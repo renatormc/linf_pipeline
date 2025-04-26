@@ -17,6 +17,6 @@ DBPATH_BACKUP = APPDIR / '.local/pericias_backup.fbk'
 DB_USER= os.getenv("DB_USER", "")
 DB_PASSWORD= os.getenv("DB_PASSWORD", "")
 MAX_CASES_PER_WORKER = 4
-N_WORKERS = 12
 
+TODOS_NO_PLANTAO = True
 

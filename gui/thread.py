@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from PySide6.QtCore import QThread, Signal
 
+from custom_type import TimeValue
 from models import DBSession
 from repo import count_cases_running, count_finished_cases, count_finished_objects, count_objects_in_equipments, get_equipments_names
 from simulation import IntervalIterator, update_lab
@@ -18,7 +19,7 @@ class PData:
     finished_cases_pipeline: int
     cases_running_pipeline: int
     cases_running_current: int
-    time: datetime
+    time: TimeValue
 
 
 class Worker(QThread):

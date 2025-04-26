@@ -21,7 +21,10 @@ class EquipamentoData:
     buffer: int
     quantidade: int
    
-
+@dataclass
+class PeritoData:
+    nome: str
+    sequencia: int
 
 class Planilha:
     def __init__(self) -> None:
@@ -57,6 +60,9 @@ class Planilha:
         self.df_exames = pd.read_excel(xls, 'exames')
         self.df_exames.columns = self.df_exames.columns.str.strip()
 
+        self.df_peritos = pd.read_excel(xls, 'peritos')
+        self.df_peritos.columns = self.df_peritos.columns.str.strip()
+
         
     def gerar_qtd_objetos(self) -> int:
         return random.choices(self.values_qtd_objetos, self.probabilites_qtd_objetos)[0]
@@ -83,6 +89,9 @@ class Planilha:
 
     def get_equipamentos(self) -> list[EquipamentoData]:
         return [EquipamentoData(nome=row['Nome'], quantidade=row['Quantidade'], buffer=row['Buffer']) for _, row in self.df_equipamentos.iterrows()]
+
+    def get_peritos(self) -> list[PeritoData]:
+        return [PeritoData(nome=row["Nome"], sequencia=row['Sequência']) for _, row in self.df_peritos.iterrows()]
 
 
     def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:

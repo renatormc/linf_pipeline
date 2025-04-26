@@ -1,5 +1,7 @@
 from typing import Literal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QProgressBar, QFormLayout, QLineEdit, QHBoxLayout
+from PySide6.QtGui import QIcon
+import config
 from gui.equipments_table import EquipmentsTable
 from gui.finished_form import FinishedForm
 from models import DBSession, Equipment
@@ -19,6 +21,7 @@ class SimulatorWindow(QWidget):
     def setup_ui(self) -> None:
         self.setWindowTitle("Pipeline simulator")
         self.setGeometry(100, 100, 1000, 600)
+        self.setWindowIcon(QIcon(str(config.APPDIR / "pipeline.png")))
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
@@ -74,7 +77,7 @@ class SimulatorWindow(QWidget):
             self.eq_current.update_equipment(name, running)
         self.frm_finished_current.update_values(p.finished_objects_current, p.finished_cases_current, p.cases_running_current)
         self.frm_finished_pipeline.update_values(p.finished_objects_pipeline, p.finished_cases_pipeline, p.cases_running_pipeline)
-        self.led_time.setText(p.time.strftime("%d/%m/%Y %H:%M"))
+        self.led_time.setText(p.time.time.strftime("%d/%m/%Y %H:%M"))
 
     def start_thread(self) -> None:
         self.worker = Worker()

@@ -3,8 +3,10 @@ from typing import Iterable
 import logging
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
-from custom_type import SIM_METHOD
+import config
+from custom_type import SIM_METHOD, TimeValue
 from models import Case, Equipment, Object, Step, Worker
+
 
 
 def get_object_step(object: Object, name: str, db_session: Session) -> Step:
@@ -62,12 +64,12 @@ def move_next_step(object: Object, db_session: Session, commit=True) -> None:
         db_session.commit()
 
 
-def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_session: Session) -> Iterable[Object]:
+def get_waiting_equipment(equipment: Equipment, time: TimeValue, limit: int, db_session: Session) -> Iterable[Object]:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == equipment.method),
         Object.next_step == equipment.name,
         or_(
-            and_(Object.status == "RUNNING", Object.start_current_step_executing + Object.duration_current_step <= time),
+            and_(Object.status == "RUNNING", Object.start_current_step_executing + Object.duration_current_step <= time.time),
             Object.status == "INITIAL"
         )
     )
@@ -83,6 +85,8 @@ def get_waiting_equipment(equipment: Equipment, time: datetime, limit: int, db_s
                 )
             )
         ))
+        if config.TODOS_NO_PLANTAO:
+            query = query.where(Object.case.has(Case.worker.has(Worker.day_sequence == time.day_sequence)))
     query = query.order_by(Object.case_id).limit(limit)
     return query.all()
 

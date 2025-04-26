@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Literal, Optional
-from sqlalchemy.orm import DeclarativeBase, scoped_session, sessionmaker, mapped_column, Mapped, relationship, Session
-from sqlalchemy.types import TypeDecorator, Float
+from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship, Session
 import sqlalchemy as sa
 import config
 
@@ -42,6 +41,7 @@ class Worker(Base):
     __tablename__ = 'worker'
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100))
+    day_sequence: Mapped[int] = mapped_column(sa.Integer)
     cases: Mapped[list['Case']] = relationship(back_populates="worker")
 
     def __repr__(self):
