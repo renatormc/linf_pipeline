@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+
+from custom_type import SIM_METHOD
 load_dotenv()
 
 if os.name == "nt":
@@ -18,5 +20,8 @@ DB_USER= os.getenv("DB_USER", "")
 DB_PASSWORD= os.getenv("DB_PASSWORD", "")
 MAX_CASES_PER_WORKER = 4
 
-TODOS_NO_PLANTAO = True
+PLANTAO: dict[SIM_METHOD, bool] = {
+    "pipeline": True,
+    "current": False
+}
 

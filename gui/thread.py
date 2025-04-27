@@ -4,7 +4,7 @@ from PySide6.QtCore import QThread, Signal
 
 from custom_type import TimeValue
 from models import DBSession
-from repo import count_cases_running, count_finished_cases, count_finished_objects, count_objects_in_equipments, get_equipments_names
+from repo import contar_casos_em_andamento, contar_casos_finalizados, contar_objetos_finalizados, contar_objetos_no_equipamento, nomes_dos_equipamentos
 from simulation import IntervalIterator, update_lab
 
 
@@ -27,7 +27,7 @@ class Worker(QThread):
 
     def __init__(self, *args, **kwargs):
         with DBSession() as db_session:
-            self.equipments = get_equipments_names(db_session)
+            self.equipments = nomes_dos_equipamentos(db_session)
         super().__init__(*args, **kwargs)
         inicio = datetime(2024, 1, 1, 0, 0, 0)
         fim = datetime(2024, 1, 31, 23, 59, 59)
@@ -40,14 +40,14 @@ class Worker(QThread):
                 update_lab("pipeline", time, db_session)
                
                 self.progress.emit(PData(
-                    equipments_current={eq: count_objects_in_equipments("current", db_session, eq) for eq in self.equipments},
-                    equipments_pipeline={eq: count_objects_in_equipments("pipeline", db_session, eq) for eq in self.equipments},
+                    equipments_current={eq: contar_objetos_no_equipamento("current", db_session, eq) for eq in self.equipments},
+                    equipments_pipeline={eq: contar_objetos_no_equipamento("pipeline", db_session, eq) for eq in self.equipments},
                     progress=i+1,
-                    finished_cases_current=count_finished_cases("current", db_session),
-                    finished_cases_pipeline=count_finished_cases("pipeline", db_session),
-                    cases_running_current=count_cases_running("current", db_session),
-                    cases_running_pipeline=count_cases_running("pipeline", db_session),
-                    finished_objects_current=count_finished_objects("current", db_session),
-                    finished_objects_pipeline=count_finished_objects("pipeline", db_session),
+                    finished_cases_current=contar_casos_finalizados("current", db_session),
+                    finished_cases_pipeline=contar_casos_finalizados("pipeline", db_session),
+                    cases_running_current=contar_casos_em_andamento("current", db_session),
+                    cases_running_pipeline=contar_casos_em_andamento("pipeline", db_session),
+                    finished_objects_current=contar_objetos_finalizados("current", db_session),
+                    finished_objects_pipeline=contar_objetos_finalizados("pipeline", db_session),
                     time=time
                 ))

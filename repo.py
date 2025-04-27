@@ -17,7 +17,7 @@ def get_object_step(object: Object, name: str, db_session: Session) -> Step:
     return query.one()
 
 
-def count_objects_on_buffer(equipment: Equipment, db_session: Session) -> int:
+def countar_objetos_no_buffer_do_equipamento(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == equipment.method),
         Object.current_location == equipment.name,
@@ -26,7 +26,7 @@ def count_objects_on_buffer(equipment: Equipment, db_session: Session) -> int:
     return query.count()
 
 
-def count_objects_executing(equipment: Equipment, db_session: Session) -> int:
+def contar_objetos_executando_no_equipamento(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
         Object.status == "RUNNING",
@@ -35,7 +35,7 @@ def count_objects_executing(equipment: Equipment, db_session: Session) -> int:
     return query.count()
 
 
-def count_total_objects(equipment: Equipment, db_session: Session) -> int:
+def total_objetos_no_equipamento(equipment: Equipment, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.current_location == equipment.name,
         Object.case.has(Case.method == equipment.method)
@@ -44,13 +44,13 @@ def count_total_objects(equipment: Equipment, db_session: Session) -> int:
     return query.count()
 
 
-def number_of_vacancies(equipment: Equipment, db_session: Session) -> int:
-    return equipment.capacity - count_total_objects(equipment, db_session)
+def numero_de_vagas_no_equipamento(equipment: Equipment, db_session: Session) -> int:
+    return equipment.capacity - total_objetos_no_equipamento(equipment, db_session)
 
 # def number_of_free_instances(equipment: Equipment) -> int:
 
 
-def move_next_step(object: Object, db_session: Session, commit=True) -> None:
+def mover_objeto_para_buffer_do_proximo_equipamento(object: Object, db_session: Session, commit=True) -> None:
     if not object.next_step:
         raise Exception("there is not next step")
     next_step = get_object_step(object, object.next_step, db_session)
@@ -64,7 +64,7 @@ def move_next_step(object: Object, db_session: Session, commit=True) -> None:
         db_session.commit()
 
 
-def get_waiting_equipment(equipment: Equipment, time: TimeValue, limit: int, db_session: Session) -> Iterable[Object]:
+def objetos_aguardando_equipamento(equipment: Equipment, time: TimeValue, limit: int, db_session: Session) -> Iterable[Object]:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == equipment.method),
         Object.next_step == equipment.name,
@@ -85,13 +85,13 @@ def get_waiting_equipment(equipment: Equipment, time: TimeValue, limit: int, db_
                 )
             )
         ))
-        if config.TODOS_NO_PLANTAO:
+        if equipment.method == "current" and config.PLANTAO["current"]:
             query = query.where(Object.case.has(Case.worker.has(Worker.day_sequence == time.day_sequence)))
     query = query.order_by(Object.case_id).limit(limit)
     return query.all()
 
 
-def get_finished_executing(equipment: Equipment, time: datetime, db_session: Session) -> list[Object]:
+def objetos_que_terminaram_de_executar(equipment: Equipment, time: datetime, db_session: Session) -> list[Object]:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == equipment.method),
         Object.current_location == equipment.name,
@@ -101,7 +101,7 @@ def get_finished_executing(equipment: Equipment, time: datetime, db_session: Ses
     return query.all()
 
 
-def count_finished_cases(method: SIM_METHOD, db_session: Session) -> int:
+def contar_casos_finalizados(method: SIM_METHOD, db_session: Session) -> int:
     query = db_session.query(Case).where(
         Case.method == method,
         ~Case.objects.any(Object.status != "FINISHED")
@@ -109,7 +109,7 @@ def count_finished_cases(method: SIM_METHOD, db_session: Session) -> int:
     return query.count()
 
 
-def count_cases_running(method: SIM_METHOD, db_session: Session) -> int:
+def contar_casos_em_andamento(method: SIM_METHOD, db_session: Session) -> int:
     if method == "current":
         return db_session.query(Case).where(
             Case.worker_id != None
@@ -121,7 +121,7 @@ def count_cases_running(method: SIM_METHOD, db_session: Session) -> int:
     return query.count()
 
 
-def count_finished_objects(method: SIM_METHOD, db_session: Session) -> int:
+def contar_objetos_finalizados(method: SIM_METHOD, db_session: Session) -> int:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == method),
         Object.status == "FINISHED"
@@ -129,7 +129,7 @@ def count_finished_objects(method: SIM_METHOD, db_session: Session) -> int:
     return query.count()
 
 
-def count_objects_in_equipments(method: SIM_METHOD, db_session: Session, name: str) -> int:
+def contar_objetos_no_equipamento(method: SIM_METHOD, db_session: Session, name: str) -> int:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == method),
         Object.current_location == name,
@@ -138,7 +138,7 @@ def count_objects_in_equipments(method: SIM_METHOD, db_session: Session, name: s
     return query.count()
 
 
-def get_next_case(method: SIM_METHOD, db_session: Session) -> Case | None:
+def proxima_pericia(method: SIM_METHOD, db_session: Session) -> Case | None:
     query = db_session.query(Case).where(
         Case.method == method,
         ~Case.objects.any(Object.status != "INITIAL"),
@@ -165,6 +165,6 @@ def clear_db(db_session: Session) -> None:
     db_session.commit()
 
 
-def get_equipments_names(db_session: Session) -> list[str]:
+def nomes_dos_equipamentos(db_session: Session) -> list[str]:
     query = db_session.query(Equipment.name).where(Equipment.method == "pipeline")
     return [item[0] for item in query.all()]
