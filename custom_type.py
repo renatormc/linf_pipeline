@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Literal
 
 
-SIM_METHOD = Literal['current', 'pipeline']
+SIM_METHOD = Literal['individual', 'pipeline']
 
 @dataclass
 class TimeValue:

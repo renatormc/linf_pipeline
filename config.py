@@ -18,10 +18,10 @@ DBPATH = APPDIR / '.local/pericias.fdb'
 DBPATH_BACKUP = APPDIR / '.local/pericias_backup.fbk'
 DB_USER= os.getenv("DB_USER", "")
 DB_PASSWORD= os.getenv("DB_PASSWORD", "")
-MAX_CASES_PER_WORKER = 4
+# MAX_CASES_PER_WORKER = 4
 
-PLANTAO: dict[SIM_METHOD, bool] = {
-    "pipeline": True,
-    "current": False
-}
+# PLANTAO: dict[SIM_METHOD, bool] = {
+#     "pipeline": True,
+#     "individual": False
+# }
 

@@ -31,7 +31,7 @@ class SimulatorWindow(QWidget):
         lay = QHBoxLayout()
 
         lay2 = QVBoxLayout()
-        self.eq_current = EquipmentsTable(self, 'current')
+        self.eq_current = EquipmentsTable(self, 'individual')
         lay2.addWidget(QLabel("Corrente"))
         lay2.addWidget(self.eq_current)
         self.frm_finished_current = FinishedForm()

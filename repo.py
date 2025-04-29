@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 import config
 from custom_type import SIM_METHOD, TimeValue
 from models import Case, Equipment, Object, Step, Worker
+from sheets import Planilha
 
 
 
@@ -64,7 +65,7 @@ def mover_objeto_para_buffer_do_proximo_equipamento(object: Object, db_session: 
         db_session.commit()
 
 
-def objetos_aguardando_equipamento(equipment: Equipment, time: TimeValue, limit: int, db_session: Session) -> Iterable[Object]:
+def objetos_aguardando_equipamento(equipment: Equipment, time: TimeValue, limit: int, db_session: Session, pla: Planilha) -> Iterable[Object]:
     query = db_session.query(Object).where(
         Object.case.has(Case.method == equipment.method),
         Object.next_step == equipment.name,
@@ -73,7 +74,7 @@ def objetos_aguardando_equipamento(equipment: Equipment, time: TimeValue, limit:
             Object.status == "INITIAL"
         )
     )
-    if equipment.method == "current":
+    if equipment.method == "individual":
         # query = query.where(Object.case.has(Case.worker_id != None))
         query = query.where(Object.case.has(
             ~Case.worker.has(
@@ -85,7 +86,7 @@ def objetos_aguardando_equipamento(equipment: Equipment, time: TimeValue, limit:
                 )
             )
         ))
-        if equipment.method == "current" and config.PLANTAO["current"]:
+        if equipment.method == "individual" and pla.vars.horario_individual == "Plantão":
             query = query.where(Object.case.has(Case.worker.has(Worker.day_sequence == time.day_sequence)))
     query = query.order_by(Object.case_id).limit(limit)
     return query.all()
@@ -110,7 +111,7 @@ def contar_casos_finalizados(method: SIM_METHOD, db_session: Session) -> int:
 
 
 def contar_casos_em_andamento(method: SIM_METHOD, db_session: Session) -> int:
-    if method == "current":
+    if method == "individual":
         return db_session.query(Case).where(
             Case.worker_id != None
         ).count()

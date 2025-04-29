@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Literal
 import pandas as pd
 import random
 import openpyxl
@@ -25,6 +26,12 @@ class EquipamentoData:
 class PeritoData:
     nome: str
     sequencia: int
+    
+@dataclass
+class Vars:
+    horario_individual: Literal['Expediente', 'Plantão']
+    horario_pipeline: Literal['Expediente', 'Plantão']
+    max_pericias_por_perito: int
 
 class Planilha:
     def __init__(self) -> None:
@@ -62,6 +69,14 @@ class Planilha:
 
         self.df_peritos = pd.read_excel(xls, 'peritos')
         self.df_peritos.columns = self.df_peritos.columns.str.strip()
+        
+        self.df_vars = pd.read_excel(xls, 'vars')
+        self.df_vars.columns = self.df_vars.columns.str.strip()
+        self.vars = Vars(
+            horario_individual=self.df_vars.loc[self.df_vars['var_name'] == 'horario_individual', 'Valor'].iloc[0],
+            horario_pipeline=self.df_vars.loc[self.df_vars['var_name'] == 'horario_pipeline', 'Valor'].iloc[0],
+            max_pericias_por_perito=self.df_vars.loc[self.df_vars['var_name'] == 'max_pericias_por_perito', 'Valor'].iloc[0],
+        )
 
         
     def gerar_qtd_objetos(self) -> int:
@@ -97,3 +112,6 @@ class Planilha:
     def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:
         df = self.df_exames[(self.df_exames['Objeto'] == objeto) & (self.df_exames['Subtipo'] == subtipo)]
         return [self.extrair_etapa(row) for _, row in df.iterrows()]
+    
+    
+       
