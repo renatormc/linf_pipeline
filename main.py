@@ -54,7 +54,10 @@ def createdb(number: int) -> None:
     backup_db()
 
 
-  
+@cli.command("stats")
+def stats() -> None: 
+    from simulation import print_stats
+    print_stats()
     
 
 if __name__ == '__main__':

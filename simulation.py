@@ -3,7 +3,7 @@ from sqlalchemy import and_, func
 from typing import Iterator
 import logging
 from custom_type import SIM_METHOD, TimeValue
-from models import Case, Equipment, Object
+from models import Case, DBSession, Equipment, Object, Step
 from models import Worker
 import time
 from sqlalchemy.orm import Session
@@ -59,6 +59,7 @@ def marcar_como_finalizados_objetos_que_finalzaram_etapa(method: SIM_METHOD, tim
         logging.info(f"Finishing object {object.id}")
         object.current_location = None
         object.status = "FINISHED"
+        
         object.start_current_step_executing = None
         db_session.add(object)
     if commit:
@@ -79,6 +80,18 @@ def puxar_do_buffer_para_execucao(equipment: Equipment, time: TimeValue, db_sess
         logging.info(f"Starting executing {object} on {equipment}")
         object.status = "RUNNING"
         object.start_current_step_executing = time.time
+        step = object.get_current_step(db_session)
+        step.started_at = time.time
+        step.ended_at = step.started_at + step.duration
+        if step.order > 0:
+            previous_step = db_session.query(Step).where(
+                Step.object_id == object.id,
+                Step.order == step.order - 1
+            ).one()
+            if step.started_at and previous_step.ended_at:
+                step.waited = step.started_at - previous_step.ended_at
+                
+        db_session.add(step)
         db_session.add(object)
     db_session.commit()
 
@@ -143,3 +156,15 @@ def atribuir_novas_pericias_aos_peritos_ociosos(time: TimeValue, db_session: Ses
             c.worker = worker
             db_session.add(c)
             db_session.commit()
+
+
+def print_stats() -> None:
+    with DBSession() as db_session:
+        res = db_session.query(func.sum(Step.waited)).select_from(Step).where(
+            Step.object.has(Object.case.has(Case.method == "individual"))
+        ).scalar()
+        print(f"Tempo de espera total individual: {res}")
+        res = db_session.query(func.sum(Step.waited)).select_from(Step).where(
+            Step.object.has(Object.case.has(Case.method == "pipeline"))
+        ).scalar()
+        print(f"Tempo de espera total pipeline: {res}")

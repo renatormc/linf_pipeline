@@ -4,17 +4,10 @@ from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship,
 import sqlalchemy as sa
 import config
 
-# engine = sa.create_engine(f"sqlite:///{config.LOCAL_FOLDER / 'cases.db'}")
-# engine = sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
-def create_engine() -> sa.Engine:
-    # return sa.create_engine(f"firebird+fdb://SYSDBA:masterkey@localhost:3050/{config.DBPATH}?charset=utf8")
-    return sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
-# engine = sa.create_engine("sqlite://")
 
-# SessionMaker = sessionmaker(autocommit=False,
-#                             autoflush=False,
-#                             bind=engine)
-# db_session = scoped_session(SessionMaker)
+def create_engine() -> sa.Engine:
+    return sa.create_engine(f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@localhost/pipeline")
+
 
 def DBSession() -> Session:
     return Session(create_engine())
@@ -22,19 +15,6 @@ def DBSession() -> Session:
 
 class Base(DeclarativeBase):
     pass
-
-
-# class TimedeltaAsSeconds(TypeDecorator):
-#     impl = Float
-#     cache_ok = True
-
-#     def process_bind_param(self, value, dialect):
-#         if value is not None:
-#             return int(value.total_seconds())
-
-#     def process_result_value(self, value, dialect):
-#         if value is not None:
-#             return timedelta(seconds=value)
 
 
 class Worker(Base):
@@ -78,10 +58,15 @@ class Object(Base):
     case_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("case.id"))
     case: Mapped['Case'] = relationship(back_populates="objects", uselist=False)
     steps: Mapped[list['Step']] = relationship(back_populates="object", cascade="all, delete-orphan", order_by="Step.order.asc()")
-    
 
     def __repr__(self):
         return f"{self.type} {self.id}"
+
+    def get_current_step(self, db_session: Session) -> 'Step':
+        return db_session.query(Step).where(
+            Step.name == self.current_location,
+            Step.object_id == self.id
+        ).one()
 
 
 class Equipment(Base):
@@ -92,7 +77,7 @@ class Equipment(Base):
     capacity: Mapped[int] = mapped_column(sa.Integer)
     method: Mapped[str] = mapped_column(sa.String(30))
     order: Mapped[int] = mapped_column(sa.Integer)
-    
+
     def __repr__(self):
         return self.name
 
@@ -105,15 +90,15 @@ class Step(Base):
     duration: Mapped[timedelta] = mapped_column(sa.Interval)
     next_step: Mapped[str | None] = mapped_column(sa.String)
     previous_step: Mapped[str | None] = mapped_column(sa.String)
+    started_at: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    ended_at: Mapped[datetime | None] = mapped_column(sa.DateTime)
+    waited: Mapped[timedelta | None] = mapped_column(sa.Interval)
     object_id: Mapped[int] = mapped_column(sa.Integer, sa.ForeignKey("object.id"))
     object: Mapped['Object'] = relationship(back_populates="steps", uselist=False)
-   
-
 
     def __repr__(self):
         return str(self.id)
 
+
 def create_tables() -> None:
     Base.metadata.create_all(create_engine())
-
-

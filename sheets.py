@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import timedelta
+import datetime
 from typing import Literal
 import pandas as pd
 import random
 import openpyxl
 
-# openpyxl.reader.excel.warnings.simplefilter(action='ignore')
+openpyxl.reader.excel.warnings.simplefilter(action='ignore') #type: ignore
 
 
 @dataclass
@@ -32,6 +33,9 @@ class Vars:
     horario_individual: Literal['Expediente', 'Plantão']
     horario_pipeline: Literal['Expediente', 'Plantão']
     max_pericias_por_perito: int
+    data_inicial: datetime
+    data_final: datetime
+
 
 class Planilha:
     def __init__(self) -> None:
@@ -76,6 +80,8 @@ class Planilha:
             horario_individual=self.df_vars.loc[self.df_vars['var_name'] == 'horario_individual', 'Valor'].iloc[0],
             horario_pipeline=self.df_vars.loc[self.df_vars['var_name'] == 'horario_pipeline', 'Valor'].iloc[0],
             max_pericias_por_perito=self.df_vars.loc[self.df_vars['var_name'] == 'max_pericias_por_perito', 'Valor'].iloc[0],
+            data_inicial=self.df_vars.loc[self.df_vars['var_name'] == 'data_inicial', 'Valor'].iloc[0],
+            data_final=self.df_vars.loc[self.df_vars['var_name'] == 'data_final', 'Valor'].iloc[0],
         )
 
         

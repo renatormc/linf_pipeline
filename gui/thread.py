@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from PySide6.QtCore import QThread, Signal
-
 from custom_type import TimeValue
 from models import DBSession
-from repo import contar_casos_em_andamento, contar_casos_finalizados, contar_objetos_finalizados, contar_objetos_no_equipamento, nomes_dos_equipamentos
+from repo import contar_casos_em_andamento, contar_casos_finalizados, contar_objetos_finalizados, contar_objetos_no_equipamento, \
+    nomes_dos_equipamentos
 from sheets import Planilha
 from simulation import IntervalIterator, update_lab
 
@@ -29,17 +29,15 @@ class Worker(QThread):
     def __init__(self,  *args, **kwargs):
         with DBSession() as db_session:
             self.equipments = nomes_dos_equipamentos(db_session)
+        self.plan = Planilha()
         super().__init__(*args, **kwargs)
-        inicio = datetime(2024, 1, 1, 0, 0, 0)
-        fim = datetime(2024, 1, 31, 23, 59, 59)
-        self.iter = IntervalIterator(inicio, fim, timedelta(minutes=30))
+        self.iter = IntervalIterator(self.plan.vars.data_inicial, self.plan.vars.data_final, timedelta(minutes=30))
 
     def run(self) -> None:
-        plan = Planilha()
         with DBSession() as db_session:
             for i, time in enumerate(self.iter):
-                update_lab("individual", time, db_session, plan)
-                update_lab("pipeline", time, db_session, plan)
+                update_lab("individual", time, db_session, self.plan)
+                update_lab("pipeline", time, db_session, self.plan)
                
                 self.progress.emit(PData(
                     equipments_current={eq: contar_objetos_no_equipamento("individual", db_session, eq) for eq in self.equipments},
