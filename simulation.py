@@ -163,8 +163,10 @@ def print_stats() -> None:
         res = db_session.query(func.sum(Step.waited)).select_from(Step).where(
             Step.object.has(Object.case.has(Case.method == "individual"))
         ).scalar()
-        print(f"Tempo de espera total individual: {res}")
+        val = res.total_seconds()/60/60
+        print(f"Tempo de espera total individual: {val}")
         res = db_session.query(func.sum(Step.waited)).select_from(Step).where(
             Step.object.has(Object.case.has(Case.method == "pipeline"))
         ).scalar()
-        print(f"Tempo de espera total pipeline: {res}")
+        val = res.total_seconds()/60/60
+        print(f"Tempo de espera total pipeline: {val}")
