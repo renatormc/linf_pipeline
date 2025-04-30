@@ -3,6 +3,7 @@ from datetime import timedelta
 from PySide6.QtCore import QThread, Signal
 from custom_type import TimeValue
 from models import DBSession
+from pericia_generator import cadastrar_equipamentos, cadastrar_peritos
 from repo import contar_casos_em_andamento, contar_casos_finalizados, contar_objetos_finalizados, contar_objetos_no_equipamento, \
     nomes_dos_equipamentos
 from sheets import Planilha
@@ -35,6 +36,8 @@ class Worker(QThread):
 
     def run(self) -> None:
         with DBSession() as db_session:
+            # cadastrar_equipamentos(self.plan, db_session)
+            cadastrar_peritos(self.plan, db_session)
             for i, time in enumerate(self.iter):
                 update_lab("individual", time, db_session, self.plan)
                 update_lab("pipeline", time, db_session, self.plan)
