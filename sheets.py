@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from datetime import timedelta
-import datetime
+from datetime import timedelta, datetime
 from typing import Literal
 import pandas as pd
 import random
 import openpyxl
 
-openpyxl.reader.excel.warnings.simplefilter(action='ignore') #type: ignore
+openpyxl.reader.excel.warnings.simplefilter(action='ignore')  # type: ignore
 
 
 @dataclass
@@ -15,30 +14,33 @@ class EtapaData:
     subtipo: str
     etapa: str
     tempo_minimo: timedelta
-    
+
 
 @dataclass
 class EquipamentoData:
     nome: str
     buffer: int
     quantidade: int
-   
+
+
 @dataclass
 class PeritoData:
     nome: str
     sequencia: int
-    
+
+
 @dataclass
 class Vars:
-    horario_individual: Literal['Expediente', 'Plantão']
-    horario_pipeline: Literal['Expediente', 'Plantão']
+    regime: Literal['pipeline', 'individual']
+    horario_trabalho: Literal['Expediente', 'Plantão']
     max_pericias_por_perito: int
     data_inicial: datetime
     data_final: datetime
 
 
 class Planilha:
-    def __init__(self) -> None:
+    def __init__(self, scene: int) -> None:
+        self.scene = scene
         xls = pd.ExcelFile('dados.ods', engine="odf")
 
         df_stat_qtd_objetos = pd.read_excel(xls, 'estatistica_qtd_objetos')
@@ -73,18 +75,19 @@ class Planilha:
 
         self.df_peritos = pd.read_excel(xls, 'peritos')
         self.df_peritos.columns = self.df_peritos.columns.str.strip()
-        
+
         self.df_vars = pd.read_excel(xls, 'vars')
         self.df_vars.columns = self.df_vars.columns.str.strip()
+        field = f"Cenário {self.scene}"
         self.vars = Vars(
-            horario_individual=self.df_vars.loc[self.df_vars['var_name'] == 'horario_individual', 'Valor'].iloc[0],
-            horario_pipeline=self.df_vars.loc[self.df_vars['var_name'] == 'horario_pipeline', 'Valor'].iloc[0],
-            max_pericias_por_perito=self.df_vars.loc[self.df_vars['var_name'] == 'max_pericias_por_perito', 'Valor'].iloc[0],
-            data_inicial=self.df_vars.loc[self.df_vars['var_name'] == 'data_inicial', 'Valor'].iloc[0],
-            data_final=self.df_vars.loc[self.df_vars['var_name'] == 'data_final', 'Valor'].iloc[0],
+            regime=self.df_vars.loc[self.df_vars['var_name'] == 'regime', field].iloc[0].strip(),
+            horario_trabalho=self.df_vars.loc[self.df_vars['var_name'] == 'horario_trabalho', field].iloc[0].strip(),
+            max_pericias_por_perito=self.df_vars.loc[self.df_vars['var_name'] == 'max_pericias_por_perito', field].iloc[0],
+            data_inicial=self.df_vars.loc[self.df_vars['var_name'] == 'data_inicial', field].iloc[0],
+            data_final=self.df_vars.loc[self.df_vars['var_name'] == 'data_final', field].iloc[0],
         )
 
-        
+
     def gerar_qtd_objetos(self) -> int:
         return random.choices(self.values_qtd_objetos, self.probabilites_qtd_objetos)[0]
 
@@ -100,7 +103,7 @@ class Planilha:
             tempo_minimo = timedelta(hours=x.hour, minutes=x.minute, seconds=x.second, microseconds=x.microsecond)
         except:
             tempo_minimo = pd.to_timedelta(row['Tempo mínimo'])
-        
+
         return EtapaData(
             row['Objeto'],
             row['Subtipo'],
@@ -114,10 +117,6 @@ class Planilha:
     def get_peritos(self) -> list[PeritoData]:
         return [PeritoData(nome=row["Nome"], sequencia=row['Sequência']) for _, row in self.df_peritos.iterrows()]
 
-
     def get_etapas(self, objeto: str, subtipo: str) -> list[EtapaData]:
         df = self.df_exames[(self.df_exames['Objeto'] == objeto) & (self.df_exames['Subtipo'] == subtipo)]
         return [self.extrair_etapa(row) for _, row in df.iterrows()]
-    
-    
-       

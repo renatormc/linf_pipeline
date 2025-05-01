@@ -2,8 +2,6 @@ from sqlalchemy import func
 from models import *
 from sheets import Planilha
 
-plan = Planilha()
-print(plan.vars)
 
 # with DBSession() as db_session:
 #     res = db_session.query(func.sum(Step.waited)).select_from(Step).where(

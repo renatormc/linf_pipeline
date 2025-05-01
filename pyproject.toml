@@ -17,6 +17,7 @@ dependencies = [
     "sqlalchemy-firebird>=2.1",
     "sqlalchemy-utils>=0.41.2",
     "sqlalchemy[mypy]>=2.0.38",
+    "tdqm>=0.0.1",
     "tqdm>=4.67.1",
 ]
 

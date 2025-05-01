@@ -1,24 +1,22 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt
-from custom_type import SIM_METHOD
 from models import DBSession, Equipment
 from repo import contar_objetos_no_equipamento
 
 
 
 class EquipmentsTable(QTableWidget):
-    def __init__(self, parent, sim_method: SIM_METHOD) -> None:
+    def __init__(self, parent) -> None:
         super().__init__(parent, rowCount=0, columnCount=4)
-        self.sim_method = sim_method
         self.eqmap: dict[str, int] = {}
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) #type: ignore
         self.setHorizontalHeaderLabels(["Equipamento", "Capacidade", "Quantidade", "Executando"])
         
         with DBSession() as db_session:
-            eqs = db_session.query(Equipment).where(Equipment.method == self.sim_method).all()
+            eqs = db_session.query(Equipment).all()
             for eq in eqs:
-                self.add_table_row(eq.name, eq.capacity, eq.lenght,  contar_objetos_no_equipamento(self.sim_method, db_session, eq.name))   
+                self.add_table_row(eq.name, eq.capacity, eq.lenght,  contar_objetos_no_equipamento(db_session, eq.name))   
 
     def add_table_row(self, name: str, capacity: int, length: int, running: int) -> None:
         row_position = self.rowCount()
