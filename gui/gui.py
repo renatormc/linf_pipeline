@@ -31,11 +31,11 @@ class SimulatorWindow(QWidget):
         lay = QHBoxLayout()
 
         lay2 = QVBoxLayout()
-        self.eq_current = EquipmentsTable(self, 'individual')
-        lay2.addWidget(QLabel("Corrente"))
-        lay2.addWidget(self.eq_current)
-        self.frm_finished_current = FinishedForm()
-        lay2.addWidget(self.frm_finished_current)
+        self.eq_individual = EquipmentsTable(self, 'individual')
+        lay2.addWidget(QLabel("Individual"))
+        lay2.addWidget(self.eq_individual)
+        self.frm_finished_individual = FinishedForm()
+        lay2.addWidget(self.frm_finished_individual)
 
         lay3 = QVBoxLayout()
         self.eq_pipeline = EquipmentsTable(self, 'pipeline')
@@ -73,9 +73,9 @@ class SimulatorWindow(QWidget):
         self.pgbar.setValue(p.progress)
         for name, running in p.equipments_pipeline.items():
             self.eq_pipeline.update_equipment(name, running)
-        for name, running in p.equipments_current.items():
-            self.eq_current.update_equipment(name, running)
-        self.frm_finished_current.update_values(p.finished_objects_current, p.finished_cases_current, p.cases_running_current)
+        for name, running in p.equipments_individual.items():
+            self.eq_individual.update_equipment(name, running)
+        self.frm_finished_individual.update_values(p.finished_objects_individual, p.finished_cases_individual, p.cases_running_individual)
         self.frm_finished_pipeline.update_values(p.finished_objects_pipeline, p.finished_cases_pipeline, p.cases_running_pipeline)
         self.led_time.setText(p.time.time.strftime("%d/%m/%Y %H:%M"))
 

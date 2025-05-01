@@ -13,14 +13,14 @@ from simulation import IntervalIterator, update_lab
 @dataclass
 class PData:
     progress: int
-    equipments_current: dict[str, int]
+    equipments_individual: dict[str, int]
     equipments_pipeline: dict[str, int]
-    finished_objects_current: int
+    finished_objects_individual: int
     finished_objects_pipeline: int
-    finished_cases_current: int
+    finished_cases_individual: int
     finished_cases_pipeline: int
     cases_running_pipeline: int
-    cases_running_current: int
+    cases_running_individual: int
     time: TimeValue
 
 
@@ -43,14 +43,14 @@ class Worker(QThread):
                 update_lab("pipeline", time, db_session, self.plan)
                
                 self.progress.emit(PData(
-                    equipments_current={eq: contar_objetos_no_equipamento("individual", db_session, eq) for eq in self.equipments},
+                    equipments_individual={eq: contar_objetos_no_equipamento("individual", db_session, eq) for eq in self.equipments},
                     equipments_pipeline={eq: contar_objetos_no_equipamento("pipeline", db_session, eq) for eq in self.equipments},
                     progress=i+1,
-                    finished_cases_current=contar_casos_finalizados("individual", db_session),
+                    finished_cases_individual=contar_casos_finalizados("individual", db_session),
                     finished_cases_pipeline=contar_casos_finalizados("pipeline", db_session),
-                    cases_running_current=contar_casos_em_andamento("individual", db_session),
+                    cases_running_individual=contar_casos_em_andamento("individual", db_session),
                     cases_running_pipeline=contar_casos_em_andamento("pipeline", db_session),
-                    finished_objects_current=contar_objetos_finalizados("individual", db_session),
+                    finished_objects_individual=contar_objetos_finalizados("individual", db_session),
                     finished_objects_pipeline=contar_objetos_finalizados("pipeline", db_session),
                     time=time
                 ))

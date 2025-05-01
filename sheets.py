@@ -39,7 +39,7 @@ class Vars:
 
 class Planilha:
     def __init__(self) -> None:
-        xls = pd.ExcelFile('dados.ods', engine="odf")
+        xls = pd.ExcelFile('dados.xlsx')
 
         df_stat_qtd_objetos = pd.read_excel(xls, 'estatistica_qtd_objetos')
         df_stat_qtd_objetos.columns = df_stat_qtd_objetos.columns.str.strip()
