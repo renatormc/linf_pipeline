@@ -14,6 +14,14 @@ def grafico_pericias_finalizadas():
     plt.ylabel('Perícias finalizadas')
     plt.tight_layout()  # Optional: adjusts layout to prevent cutoff
     plt.savefig(".local/pericias_finalizadas.png")  # Save the figure
+
+
+def grafico_objetos_finalizados():
+    df['objetos_finalizados'].plot.bar()
+    plt.xlabel('Cenário')
+    plt.ylabel('Objetos finalizados')
+    plt.tight_layout()  # Optional: adjusts layout to prevent cutoff
+    plt.savefig(".local/objetos_finalizados.png")  # Save the figure
     # plt.show()
 
 def grafico_tempo_espera():
@@ -25,4 +33,5 @@ def grafico_tempo_espera():
     # plt.show()
 
 grafico_pericias_finalizadas()
+grafico_objetos_finalizados()
 grafico_tempo_espera()
